@@ -7,8 +7,22 @@ from flask_restful import Resource, Api
 # import final_v3 as v3
 import backend as v4
 
+
+class Alertas():
+    def __init__(self):
+        self.alerta = False
+
+    def hayAlerta(self, fh):
+        self.alerta = True
+        self.fh = fh
+
+    def noAlerta(self):
+        self.alerta = False
+        self.fh = None
+
 app = Flask(__name__)
 api = Api(app)
+alertaVigente = Alertas()
 CORS(app)
 
 class ServerTest(Resource):
@@ -32,17 +46,21 @@ class Prediccion(Resource):
         else:
             resp = svm4.svm(lugar, finicio, ffin)
 
-
+        if resp['tormenta']:
+            if not alertaVigente.alerta:
+                alertaVigente.hayAlerta(resp['tiempo_alerta'])
+        else:
+            alertaVigente.noAlerta()
 
         return json.dumps({
             'success': True,
-            'tormenta': resp['tormenta'],
+            'tormenta': alertaVigente.alerta,
             'tiempo': round(resp['tiempo'],4),
             'rayosic_geojson': resp['rayosic.geojson'],
             'rayoscg_geojson': resp['rayoscg.geojson'],
             'pol_geojson':resp['pol.geojson'],
             'tra_geojson':resp['tra.geojson'],
-            'tiempo_alerta':resp['tiempo_alerta']
+            'tiempo_alerta': alertaVigente.fh
         }), 200, {
             'ContentType': 'application/json'
         }

@@ -74,7 +74,7 @@ class SVM:
         analisis_data, ArrayCentroides = [], []
         historialDescargas = [None] * 9
         printPossibleWeather = False
-        while tiempoAnalizarIni <= diaAnalizarFin:
+        while tiempoAnalizarIni < diaAnalizarFin:
 
             query = 'start_time >="' + datetime.strftime(tiempoAnalizarIni,
                                                          '%Y-%m-%d %H:%M:%S') + '" and start_time<="' + datetime.strftime(
@@ -158,7 +158,8 @@ class SVM:
                     ArrayCentroides = []
 
 
-                    if qtyCells <= 4:
+                    # if qtyCells <= 4:
+                    if not self.tormentaDetectada:
                         print(str(tiempoAnalizarIni)+" tormenta en 1h "+str(tiempoAnalizarIni + timedelta(minutes=60)))
                         self.tiempo_alerta = str(datetime.time(tiempoAnalizarIni + timedelta(minutes=60)))
                         self.tormentaDetectada = True
@@ -294,6 +295,9 @@ class SVM:
 
             tiempoAnalizarIni = tiempoAnalizarFin
             tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
+
+            if self.tormentaDetectada == True:
+                tiempoAnalizarIni = diaAnalizarFin
         # plot.printMap()
 
         # SVM.guardarModelo()
