@@ -7,8 +7,8 @@ from datetime import timedelta
 
 if __name__ == '__main__':
     database_connection = db.DatabaseConnection()
-    diaAnalizarIni = datetime.strptime('2016-12-18 00:00:00.0000', '%Y-%m-%d %H:%M:%S.%f')
-    diaAnalizarFin = datetime.strptime('2016-12-24 23:59:59.0000', '%Y-%m-%d %H:%M:%S.%f')
+    diaAnalizarIni = datetime.strptime('2016-12-19 13:00:00.0000', '%Y-%m-%d %H:%M:%S.%f')
+    diaAnalizarFin = datetime.strptime('2016-12-19 13:59:59.0000', '%Y-%m-%d %H:%M:%S.%f')
 
     coordenadaAnalizar = '-57.692849,-25.212378'
     diametroAnalizar = '10000' #en metros
@@ -23,10 +23,16 @@ if __name__ == '__main__':
     df = pd.DataFrame(data=rows, columns=['start_time','end_time','type','latitude','longitude','peak_current','ic_height','number_of_sensors','ic_multiplicity','cg_multiplicity','geom'])
 
     while tiempoAnalizarIni <= diaAnalizarFin:
-        # query = 'start_time >='+datetime.strftime(tiempoAnalizarIni, '%Y-%m-%d %H:%M:%S.%f')+' and start_time<='+datetime.strftime(tiempoAnalizarFin, '%Y-%m-%d %H:%M:%S.%f')+''
-        # query = 'start_time >="2016-12-18 00:00:00.0000" and start_time <= "2016-12-21 00:00:00.0000"'
+        strd1 = datetime.strftime(tiempoAnalizarIni, '%Y-%m-%d %H:%M:%S.%f')
+        strd2 = datetime.strftime(tiempoAnalizarFin, '%Y-%m-%d %H:%M:%S.%f')
 
-        df = df[(df['start_time']>='"'+datetime.strftime(tiempoAnalizarIni, '%Y-%m-%d %H:%M:%S.%f')+'"') & (df['start_time']<='"'+datetime.strftime(tiempoAnalizarFin, '%Y-%m-%d %H:%M:%S.%f')+'"')]
+
+        # query = 'start_time >="'+datetime.strftime(tiempoAnalizarIni, '%Y-%m-%d %H:%M:%S.%f')+'" and start_time<="'+datetime.strftime(tiempoAnalizarFin, '%Y-%m-%d %H:%M:%S.%f')+'"'
+        query = 'start_time >="'+strd1+'" and start_time <= "'+strd2+'"'
+        df = df.query(query)
+        print(df)
+        exit(0)
+        # df = df[(df['start_time']>='"'+datetime.strftime(tiempoAnalizarIni, '%Y-%m-%d %H:%M:%S.%f')+'"') & (df['start_time']<='"'+datetime.strftime(tiempoAnalizarFin, '%Y-%m-%d %H:%M:%S.%f')+'"')]
 
         if not df.empty:
             for d in df: #df tiene todos los registros de descargas entre los tiempos dados en lapso de tiempoIntervalo minutos
