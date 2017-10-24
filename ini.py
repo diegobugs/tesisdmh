@@ -11,7 +11,7 @@ if __name__ == '__main__':
     diaAnalizarFin = datetime.strptime('2016-11-30 23:59:59', '%Y-%m-%d %H:%M:%S')
 
     coordenadaAnalizar = '-57.606765,-25.284659'
-    diametroAnalizar = '10000' #en metros
+    diametroAnalizar = '18000' #en metros
 
     tiempoIntervalo = 10 #minutos
 
@@ -19,7 +19,7 @@ if __name__ == '__main__':
     tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
 
     rows = database_connection.query(
-        "SELECT start_time,end_time,type,latitude,longitude,peak_current,ic_height,number_of_sensors,ic_multiplicity,cg_multiplicity,geom FROM lightning_data WHERE ST_DistanceSphere(geom, ST_MakePoint(" + coordenadaAnalizar + ")) <= " + diametroAnalizar + "  AND start_time >= to_timestamp('" + str(diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND start_time <= to_timestamp('" + str(diaAnalizarFin) + "', 'YYYY-MM-DD HH24:MI:SS.MS')")
+        "SELECT start_time,end_time,type,latitude,longitude,peak_current,ic_height,number_of_sensors,ic_multiplicity,cg_multiplicity,geom FROM lightning_data WHERE type=1 AND ST_DistanceSphere(geom, ST_MakePoint(" + coordenadaAnalizar + ")) <= " + diametroAnalizar + "  AND start_time >= to_timestamp('" + str(diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND start_time <= to_timestamp('" + str(diaAnalizarFin) + "', 'YYYY-MM-DD HH24:MI:SS.MS')")
     df = pd.DataFrame(data=rows, columns=['start_time','end_time','type','latitude','longitude','peak_current','ic_height','number_of_sensors','ic_multiplicity','cg_multiplicity','geom'])
 
     while tiempoAnalizarIni <= diaAnalizarFin:
