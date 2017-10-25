@@ -11,7 +11,7 @@ if __name__ == '__main__':
     diaAnalizarFin = datetime.strptime('2016-11-30 23:59:59', '%Y-%m-%d %H:%M:%S')
 
     coordenadaAnalizar = '-57.606765,-25.284659'
-    diametroAnalizar = '18000' #en metros
+    diametroAnalizar = '30000' #en metros
 
     tiempoIntervalo = 10 #minutos
 
@@ -23,8 +23,6 @@ if __name__ == '__main__':
     df = pd.DataFrame(data=rows, columns=['start_time','end_time','type','latitude','longitude','peak_current','ic_height','number_of_sensors','ic_multiplicity','cg_multiplicity','geom'])
 
     while tiempoAnalizarIni <= diaAnalizarFin:
-        strd1 = datetime.strftime(tiempoAnalizarIni, '%Y-%m-%d %H:%M:%S')
-        strd2 = datetime.strftime(tiempoAnalizarFin, '%Y-%m-%d %H:%M:%S')
 
         query = 'start_time >="'+datetime.strftime(tiempoAnalizarIni, '%Y-%m-%d %H:%M:%S')+'" and start_time<="'+datetime.strftime(tiempoAnalizarFin, '%Y-%m-%d %H:%M:%S')+'"'
         # query = 'start_time >="'+strd1+'" and start_time <= "'+strd2+'"'
@@ -38,12 +36,14 @@ if __name__ == '__main__':
             for i, row in enumerate(datosAnalisis.itertuples(),1):
                 peak_current += abs(row.peak_current)
 
-                print(row.start_time, abs(row.peak_current))
+                # print(row.start_time, abs(row.peak_current))
                 if(peak_current >= 1000000):
                     print("########")
-                    print("Posible evento severo ", peak_current)
-                    print(row.start_time)
-                    print("########")
+                    print("Posible evento severo. Amperaje de:", peak_current)
+
+                    # Convertir hora UTC a hora local UTC -3
+                    horaEvento = row.start_time - timedelta(hours=3)
+                    print(horaEvento)
 
 
         tiempoAnalizarIni = tiempoAnalizarFin
