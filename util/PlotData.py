@@ -1,5 +1,6 @@
 from mpl_toolkits.basemap import Basemap
 import matplotlib.pyplot as plt
+import time
 
 class Plot:
 
@@ -33,7 +34,12 @@ class Plot:
     def drawIntoMap(self,x,y,type):
         # -57.623154, -25.280073
         x, y = self.m(x,y)
-        self.m.plot(x, y, 'bo', markersize=2)
+        self.m.plot(x, y, 'bo', markersize=0.2)
+
+    def saveToFile(self,fileName="img_"+time.strftime("%Y%m%d-%H%M%S%M"),extension="png"):
+        plt.savefig("png/"+fileName+"."+extension,dpi=600)
+        plt.close()
+
 
     def printMap(self):
         plt.title('Paraguay')

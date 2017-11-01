@@ -2,13 +2,13 @@ import pandas as pd
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 from util import DatabaseConnection as db
-from util import PlotData as plot
+from util import PlotData as plt
 from datetime import datetime
 from datetime import timedelta
 
 if __name__ == '__main__':
 
-    plot = plot.Plot()
+    plot = plt.Plot()
     # plot.drawIntoMap(-57.623154, -25.280073,1)
     # plot.drawIntoMap(-57.603154, -25.284073, 1)
     # plot.printMap()
@@ -45,19 +45,24 @@ if __name__ == '__main__':
 
                 # print(row.latitude,row.longitude)
 
+
+
                 # print(row.start_time, abs(row.peak_current))
                 if(peak_current >= 1000000):
-                    print("########")
-                    print("Posible evento severo. Amperaje de:", peak_current)
+                    # print("########")
+                    # print("Posible evento severo. Amperaje de:", peak_current)
                     plot.drawIntoMap(row.longitude, row.latitude, row.type)
                     # Convertir hora UTC a hora local UTC -3
                     horaEvento = row.start_time - timedelta(hours=3)
-                    print(horaEvento)
+                    # print(horaEvento)
+                    # fileName = str(row.start_time).replace(":","").replace(".","")
+                    # plot.saveToFile(fileName)
+                    # plot = plt.Plot()
 
 
         tiempoAnalizarIni = tiempoAnalizarFin
         tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
-    plot.printMap()
+    # plot.printMap()
     exit(0)
 
     """"
