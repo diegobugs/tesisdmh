@@ -1,3 +1,12 @@
+
+"""
+
+analisis_V1
+
+Analisando cada descarga que supere los 1000kA o 1000000 amperios en un rango de 45km
+
+"""
+
 import pandas as pd
 from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
@@ -14,13 +23,13 @@ if __name__ == '__main__':
     # plot.printMap()
     # exit(0)
     database_connection = db.DatabaseConnection()
-    diaAnalizarIni = datetime.strptime('2016-11-27 10:00:00', '%Y-%m-%d %H:%M:%S')
-    diaAnalizarFin = datetime.strptime('2016-11-27 15:59:59', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarIni = datetime.strptime('2016-10-24 00:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarFin = datetime.strptime('2016-10-24 23:59:59', '%Y-%m-%d %H:%M:%S')
 
     coordenadaAnalizar = '-57.606765,-25.284659'
-    diametroAnalizar = '35000' #en metros
+    diametroAnalizar = '45000' #en metros
 
-    tiempoIntervalo = 6 #minutos
+    tiempoIntervalo = 10 #minutos
 
     tiempoAnalizarIni = diaAnalizarIni
     tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
@@ -47,8 +56,6 @@ if __name__ == '__main__':
 
                 # print(row.latitude,row.longitude)
 
-
-
                 # print(row.start_time, abs(row.peak_current))
                 if(peak_current >= 1000000):
                     printPosibleWeather = True
@@ -63,12 +70,18 @@ if __name__ == '__main__':
                     # plot = plt.Plot()
             if(printPosibleWeather):
                 fileName = False
+                qty = 0
                 for i,row in enumerate(datosAnalisis.itertuples(),1):
                     plot.drawIntoMap(row.longitude,row.latitude,row.type)
+                    qty += 1
                     if fileName==False:
-                        fileName = str(row.start_time).replace(":", "").replace(".", "")
+                        # Convertir hora UTC a hora local UTC -3
+                        horaEvento = row.start_time
+                        # horaEvento = row.start_time - timedelta(hours=3)
+                        fileName = str(horaEvento).replace(":", "").replace(".", "")
                 plot.saveToFile(fileName)
                 plot = plt.Plot()
+                printPosibleWeather = False
 
         tiempoAnalizarIni = tiempoAnalizarFin
         tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
