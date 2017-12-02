@@ -90,9 +90,9 @@ if __name__ == '__main__':
                 # points = np.array(points)
                 points = np.array(points)
                 hull = ConvexHull(points)
-                plot.draw(points, hull)
-                plot.saveToFile(fileName)
-                plot = plt.Plot()
+                # plot.draw(points, hull)
+                # plot.saveToFile(fileName)
+                # plot = plt.Plot()
                 printPosibleWeather = False
 
         tiempoAnalizarIni = tiempoAnalizarFin
