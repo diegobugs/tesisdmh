@@ -18,6 +18,7 @@ from datetime import datetime
 from datetime import timedelta
 from scipy.spatial import ConvexHull
 import numpy as np
+import  time
 
 
 if __name__ == '__main__':
@@ -27,6 +28,7 @@ if __name__ == '__main__':
     # plot.drawIntoMap(-57.603154, -25.284073, 1)
     # plot.printMap()
     # exit(0)
+    inicio_de_tiempo = time.time()
     database_connection = db.DatabaseConnection()
     diaAnalizarIni = datetime.strptime('2016-10-24 00:00:00', '%Y-%m-%d %H:%M:%S')
     diaAnalizarFin = datetime.strptime('2016-10-24 23:59:59', '%Y-%m-%d %H:%M:%S')
@@ -90,14 +92,18 @@ if __name__ == '__main__':
                 # points = np.array(points)
                 points = np.array(points)
                 hull = ConvexHull(points)
-                # plot.draw(points, hull)
-                # plot.saveToFile(fileName)
-                # plot = plt.Plot()
+                plot.draw(points, hull)
+                plot.saveToFile(fileName)
+                plot = plt.Plot()
                 printPosibleWeather = False
 
         tiempoAnalizarIni = tiempoAnalizarFin
         tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
     # plot.printMap()
+
+    tiempo_final = time.time()
+    tiempo_transcurrido = tiempo_final - inicio_de_tiempo
+    print("Tiempo transcurrido de análisis: "+str(tiempo_transcurrido) + " segundos")
     exit(0)
 
     """"
