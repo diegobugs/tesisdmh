@@ -1,34 +1,25 @@
 import csv
-import pandas as pd
+# import pandas as pd
 import  time
 
 
 inFile = 'dataset/1.csv'
 
-_columns = ["type",
-               "timestamp",
-               "latitude",
-               "longitude",
-               "peakcurrent",
-               "icheight",
-               "numbersensors",
-               "icmultiplicity",
-               "cgmultiplicity",
-               "starttime",
-               "endtime",
-               "duration",
-               "ullatitude",
-               "ullongitude",
-               "lrlatitude",
-               "lrlongitude"]
-
 rowsAnalized = 0
 inicio_de_tiempo = time.time()
 
-for row in pd.read_csv(inFile,sep=',', chunksize=1):
-    latitude = row.latitude.item()
-    longitude = row.longitude.item()
-    rowsAnalized+=1
+# for row in pd.read_csv(inFile,sep=',', chunksize=1):
+#     latitude = row.latitude.item()
+#     longitude = row.longitude.item()
+#     rowsAnalized+=1
+
+a = open(inFile, 'rt')
+reader = csv.reader(a)
+for row in reader:
+    # print(row)
+    rowsAnalized += 1
+
+a.close()
 
 tiempo_final = time.time()
 tiempo_transcurrido = tiempo_final - inicio_de_tiempo
