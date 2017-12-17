@@ -57,8 +57,17 @@ class Plot:
     def drawIntoMap(self,x,y,type):
         # -57.623154, -25.280073
         x, y = self.m(x,y)
-        marker = '+'
-        self.m.plot(x, y, marker, markersize=0.2, color="red")
+
+        if type==1 or type==0:
+            marker = '+' #rayos
+            markersize = 0.2
+            color = "red"
+        else:
+            marker = 'o' #centro
+            markersize = 0.4
+            color = "green"
+
+        self.m.plot(x, y, marker, markersize=markersize, color=color)
 
     def saveToFile(self,fileName="img_"+time.strftime("%Y%m%d-%H%M%S%M"),extension="png"):
         plt.title(fileName)
