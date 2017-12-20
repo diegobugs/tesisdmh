@@ -23,6 +23,28 @@ import numpy as np
 import  time
 
 
+def MedirDistancia(lat, lon, latt, lonn):
+    from math import sin, cos, sqrt, atan2, radians
+
+    # approximate radius of earth in km
+    R = 6373.0
+
+    lat1 = radians(lat)
+    lon1 = radians(lon)
+    lat2 = radians(latt)
+    lon2 = radians(lonn)
+
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+
+    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    distance = R * c
+
+    # print("Result:", distance)
+
+
 if __name__ == '__main__':
 
     plot = plt.Plot()
@@ -58,6 +80,8 @@ if __name__ == '__main__':
         # df = df[(df['start_time']>='"'+datetime.strftime(tiempoAnalizarIni, '%Y-%m-%d %H:%M:%S.%f')+'"') & (df['start_time']<='"'+datetime.strftime(tiempoAnalizarFin, '%Y-%m-%d %H:%M:%S.%f')+'"')]
         peak_current = 0 #Corriente pico
 
+        EvoPuntoInicial = []
+        EvoPuntoFinal = []
         if not datosAnalisis.empty:
             printPosibleWeather = False
             for i, row in enumerate(datosAnalisis.itertuples(),1):
@@ -75,7 +99,7 @@ if __name__ == '__main__':
                     dff = pd.DataFrame(data=rs, columns=['start_time', 'end_time', 'type', 'latitude', 'longitude',
                                                           'peak_current', 'ic_height', 'number_of_sensors',
                                                           'ic_multiplicity', 'cg_multiplicity', 'geom'])
-
+                    ArrayCentroides = []
                     while tiempoTormentaIni <= tiempoAnalizarIni:
                         tiempoTormentaFin = tiempoTormentaIni + timedelta(minutes=10)
 
@@ -109,6 +133,13 @@ if __name__ == '__main__':
                                     cx = np.mean(hull.points[hull.vertices, 0])
                                     cy = np.mean(hull.points[hull.vertices, 1])
 
+                                    if not EvoPuntoInicial:
+                                        EvoPuntoInicial = [cx,cy]
+
+                                    EvoPuntoFinal = [cx,cy]
+
+                                    ArrayCentroides.append([cx,cy])
+
                                     # Una vez tengamos el centroid debemos ir tomando diferentes poligonos en un lapso de 15-20 minutos atras del 1000000 miliampereos
                                     # obtener lo sigiente:
                                     # velocidad segun distancia del primer poligono al ultimo en los 15-20 minutos
@@ -132,6 +163,7 @@ if __name__ == '__main__':
                     # fileName = str(row.start_time).replace(":","").replace(".","")
                     # plot.saveToFile(fileName)
                     # plot = plt.Plot()
+                    print("Inicio:"+str(EvoPuntoInicial)+" final:"+str(EvoPuntoFinal))
             if(printPosibleWeather):
                 fileName = False
                 qty = 0
@@ -167,6 +199,9 @@ if __name__ == '__main__':
                 plot.saveToFile(fileName)
                 plot = plt.Plot()
                 printPosibleWeather = False
+
+            if EvoPuntoFinal and EvoPuntoInicial:
+                MedirDistancia(EvoPuntoInicial[0],EvoPuntoInicial[1], EvoPuntoFinal[0],EvoPuntoFinal[1])
 
         tiempoAnalizarIni = tiempoAnalizarFin
         tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
