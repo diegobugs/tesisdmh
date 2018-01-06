@@ -20,7 +20,7 @@ from datetime import datetime
 from datetime import timedelta
 from scipy.spatial import ConvexHull
 import numpy as np
-import  time
+import time
 
 
 def MedirDistancia(lat, lon, latt, lonn):
@@ -41,8 +41,8 @@ def MedirDistancia(lat, lon, latt, lonn):
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
 
     distance = R * c
-
-    # print("Result:", distance)
+    return distance
+    # print("Distancia:", distance)
 
 
 if __name__ == '__main__':
@@ -80,6 +80,8 @@ if __name__ == '__main__':
         # df = df[(df['start_time']>='"'+datetime.strftime(tiempoAnalizarIni, '%Y-%m-%d %H:%M:%S.%f')+'"') & (df['start_time']<='"'+datetime.strftime(tiempoAnalizarFin, '%Y-%m-%d %H:%M:%S.%f')+'"')]
         peak_current = 0 #Corriente pico
 
+        HoraFinalCelula = None
+        HoraInicialCelula = None
         EvoPuntoInicial = []
         EvoPuntoFinal = []
         if not datosAnalisis.empty:
@@ -99,12 +101,13 @@ if __name__ == '__main__':
                     dff = pd.DataFrame(data=rs, columns=['start_time', 'end_time', 'type', 'latitude', 'longitude',
                                                           'peak_current', 'ic_height', 'number_of_sensors',
                                                           'ic_multiplicity', 'cg_multiplicity', 'geom'])
+
+                    if HoraFinalCelula is None:
+                        HoraFinalCelula = row.start_time
+
                     ArrayCentroides = []
                     while tiempoTormentaIni <= tiempoAnalizarIni:
                         tiempoTormentaFin = tiempoTormentaIni + timedelta(minutes=10)
-
-
-
                         query = 'start_time >="' + datetime.strftime(tiempoTormentaIni,'%Y-%m-%d %H:%M:%S') + '" and start_time<="' + datetime.strftime(tiempoTormentaFin, '%Y-%m-%d %H:%M:%S') + '"'
                         tormentaAnalisis = dff.query(query)
                         if not datosAnalisis.empty:
@@ -113,7 +116,7 @@ if __name__ == '__main__':
                             qty = 0
                             for k, r in enumerate(tormentaAnalisis.itertuples(), 1):
                                 qty+=1
-                                plot.drawIntoMap(r.longitude, r.latitude, r.type)
+                                # plot.drawIntoMap(r.longitude, r.latitude, r.type)
                                 points.append([r.longitude, r.latitude])
                                 if fileName == False:
                                     # Convertir hora UTC a hora local UTC -3
@@ -121,6 +124,8 @@ if __name__ == '__main__':
                                     # horaEvento = row.start_time - timedelta(hours=3)
                                     fileName = str(horaEvento).replace(":", "").replace(".", "")
                                     fileName = "celula_inicial_"+fileName
+                                    if HoraInicialCelula is None:
+                                        HoraInicialCelula = horaEvento
 
                             if fileName:
                                 # points = np.array(points)
@@ -128,7 +133,7 @@ if __name__ == '__main__':
 
                                 if qty>=3:
                                     hull = ConvexHull(points, qhull_options="QJ")
-                                    plot.draw(points, hull)
+                                    # plot.draw(points, hull)
                                     # Get centroid
                                     cx = np.mean(hull.points[hull.vertices, 0])
                                     cy = np.mean(hull.points[hull.vertices, 1])
@@ -147,10 +152,10 @@ if __name__ == '__main__':
                                     # angulo de curvatura entre ultimo, anteoultimo y penultimo poligono
 
                                     # print("Centroid X:"+str(cx)+" Centroid Y:"+str(cy))
-                                    plot.drawIntoMap(cx, cy, 2)
+                                    # plot.drawIntoMap(cx, cy, 2)
 
-                                plot.saveToFile(fileName)
-                                plot = plt.Plot()
+                                # plot.saveToFile(fileName)
+                                # plot = plt.Plot()
 
                         tiempoTormentaIni = tiempoTormentaFin
 
@@ -163,29 +168,29 @@ if __name__ == '__main__':
                     # fileName = str(row.start_time).replace(":","").replace(".","")
                     # plot.saveToFile(fileName)
                     # plot = plt.Plot()
-                    print("Inicio:"+str(EvoPuntoInicial)+" final:"+str(EvoPuntoFinal))
+                    # print("Inicio:"+str(EvoPuntoInicial)+" final:"+str(EvoPuntoFinal))
             if(printPosibleWeather):
                 fileName = False
                 qty = 0
                 points = []
                 for i,row in enumerate(datosAnalisis.itertuples(),1):
-                    plot.drawIntoMap(row.longitude,row.latitude,row.type)
+                    # plot.drawIntoMap(row.longitude,row.latitude,row.type)
                     qty += 1
                     points.append([row.longitude, row.latitude])
                     if fileName==False:
                         # Convertir hora UTC a hora local UTC -3
                         horaEvento = row.start_time
                         # horaEvento = row.start_time - timedelta(hours=3)
-                        fileName = str(horaEvento).replace(":", "").replace(".", "")
+                        # fileName = str(horaEvento).replace(":", "").replace(".", "")
 
                 # points = np.array(points)
                 points = np.array(points)
-                hull = ConvexHull(points)
-                plot.draw(points, hull)
+                # hull = ConvexHull(points)
+                # plot.draw(points, hull)
 
                 # Get centroid
-                cx = np.mean(hull.points[hull.vertices, 0])
-                cy = np.mean(hull.points[hull.vertices, 1])
+                # cx = np.mean(hull.points[hull.vertices, 0])
+                # cy = np.mean(hull.points[hull.vertices, 1])
 
                 # Una vez tengamos el centroid debemos ir tomando diferentes poligonos en un lapso de 15-20 minutos atras del 1000000 miliampereos
                 # obtener lo sigiente:
@@ -194,14 +199,19 @@ if __name__ == '__main__':
                 # angulo de curvatura entre ultimo, anteoultimo y penultimo poligono
 
                 #print("Centroid X:"+str(cx)+" Centroid Y:"+str(cy))
-                plot.drawIntoMap(cx,cy,2)
+                # plot.drawIntoMap(cx,cy,2)
 
-                plot.saveToFile(fileName)
-                plot = plt.Plot()
+                # plot.saveToFile(fileName)
+                # plot = plt.Plot()
                 printPosibleWeather = False
 
             if EvoPuntoFinal and EvoPuntoInicial:
-                MedirDistancia(EvoPuntoInicial[0],EvoPuntoInicial[1], EvoPuntoFinal[0],EvoPuntoFinal[1])
+                distancia = MedirDistancia(EvoPuntoInicial[0],EvoPuntoInicial[1], EvoPuntoFinal[0],EvoPuntoFinal[1])
+                if HoraInicialCelula and HoraFinalCelula:
+                    tiempoDesplazamiento = HoraFinalCelula - HoraInicialCelula
+                    tiempoDesplazamiento = tiempoDesplazamiento / timedelta(hours=1)
+                    velocidad = distancia/tiempoDesplazamiento
+                    print("Se desplazó "+str(distancia)+"km en "+str(tiempoDesplazamiento.minute))+" minutos. A una velocidad de "+str(velocidad)+" km/h"
 
         tiempoAnalizarIni = tiempoAnalizarFin
         tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
