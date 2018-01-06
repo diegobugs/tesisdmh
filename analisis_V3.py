@@ -211,7 +211,12 @@ if __name__ == '__main__':
                     tiempoDesplazamiento = HoraFinalCelula - HoraInicialCelula
                     tiempoDesplazamiento = tiempoDesplazamiento / timedelta(hours=1)
                     velocidad = distancia/tiempoDesplazamiento
-                    print("Se desplazó "+str(distancia)+"km en "+str(tiempoDesplazamiento.minute))+" minutos. A una velocidad de "+str(velocidad)+" km/h"
+                    # print("Se desplazó "+str(distancia)+"km en "+str(tiempoDesplazamiento)+" horas. A una velocidad de "+str(velocidad)+" km/h")
+
+                    # @TODO
+                    # Hallar la recta segun Regrision lineal
+                    # Obtener el punto donde las coordenadas se encuentren sobre la recta a una distancia de (tiempoDeAnalisis*velocidad)
+
 
         tiempoAnalizarIni = tiempoAnalizarFin
         tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
