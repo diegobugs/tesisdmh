@@ -62,10 +62,26 @@ class Plot:
             marker = '+' #rayos
             markersize = 0.2
             color = "red"
-        else:
+        if type==2:
             marker = 'o' #centro
             markersize = 0.4
             color = "green"
+        if type==3:
+            marker = 'o'  # centro
+            markersize = 0.2
+            color = "blue"
+            # Calculamos los coeficientes del ajuste (a X + b)
+            a, b = np.polyfit(x, y, 1)
+            # Calculamos el coeficiente de correlación
+            r = np.corrcoef(x, y)
+            # Dibujamos los datos para poder visualizarlos y ver si sería lógico
+            # considerar el ajuste usando un modelo lineal
+            self.m.plot(x, y, 'o')
+            self.m.plot(np.min(x) - 1, np.max(x) + 1)
+            self.m.plot(np.min(y) - 1, np.max(y) + 1)
+            self.m.plot(x, a * x + b)
+            # plt.text(4, 10, 'r = {0:2.3f}'.format(r[0, 1]))
+            # plt.text(4, 9, 'Y = {0:2.3f} X + {1:2.3f}'.format(a, b))
 
         self.m.plot(x, y, marker, markersize=markersize, color=color)
 
