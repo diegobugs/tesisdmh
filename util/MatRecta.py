@@ -1,32 +1,33 @@
-import numpy as np
-import matplotlib.pyplot as plt
+from math import sin, cos, sqrt, atan2, radians,degrees, atan
+
+# approximate radius of earth in km
+R = 6373.0
+
+lat1 = radians(-25.71722)
+lon1 = radians(-58.2130966667)
+lat2 = radians(-25.5745666667)
+lon2 = radians(-57.9705616667)
+
+dlon = lon2 - lon1
+dlat = lat2 - lat1
+
+a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
+c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+distance = R * c
+
+m = dlon / dlat
+grados = degrees(atan(m))
 
 
-# X e Y serán el primer conjunto del cuarteto de Anscombe
-# (https://en.wikipedia.org/wiki/Anscombe%27s_quartet)
+velocidad = 25.9633
 
-points = ([-25.0,-50.0],[-24.0,51.0],[-26.0,50.0],[-24.0,-54.0])
+distance = velocidad * 0.16666
 
+x2 = lat2 + distance * cos(grados)
+y2 = lon2 + distance * sin(grados)
 
-X = [point[0] for point in points]
-X = np.array(X)
-Y = [point[1] for point in points]
-Y = np.array(Y)
+print(x2)
+print(y2)
 
-# X = np.array([10.0, 8.0, 13.0, 9.0, 11.0, 14.0, 6.0, 4.0, 12.0, 7.0, 5.0])
-# Y = np.array([8.04, 6.95, 7.58, 8.81, 8.33, 9.96, 7.24, 4.26, 10.84, 4.82, 5.68])
-
-# Calculamos los coeficientes del ajuste (a X + b)
-a, b = np.polyfit(X, Y, 1)
-# Calculamos el coeficiente de correlación
-r = np.corrcoef(X, Y)
-
-# Dibujamos los datos para poder visualizarlos y ver si sería lógico
-# considerar el ajuste usando un modelo lineal
-plt.plot(X, Y, 'o')
-plt.xlim(np.min(X) - 1, np.max(X) + 1)
-plt.ylim(np.min(Y) - 1, np.max(Y) + 1)
-plt.plot(X, a * X + b)
-plt.text(4, 10, 'r = {0:2.3f}'.format(r[0, 1]))
-plt.text(4, 9, 'Y = {0:2.3f} X + {1:2.3f}'.format(a, b))
-plt.show()
+print(grados)

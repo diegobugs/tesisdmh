@@ -59,13 +59,20 @@ if __name__ == '__main__':
     # exit(0)
     inicio_de_tiempo = time.time()
     database_connection = db.DatabaseConnection()
-    diaAnalizarIni = datetime.strptime('2016-10-24 20:00:00', '%Y-%m-%d %H:%M:%S')
-    diaAnalizarFin = datetime.strptime('2016-10-24 22:56:59', '%Y-%m-%d %H:%M:%S')
-
+    #  DATOS DE ANALISIS DE PRUEBA
+    # diaAnalizarIni = datetime.strptime('2016-10-24 20:00:00', '%Y-%m-%d %H:%M:%S')
+    # diaAnalizarFin = datetime.strptime('2016-10-24 22:56:59', '%Y-%m-%d %H:%M:%S')
     coordenadaAnalizar = '-57.606765,-25.284659'
+
+    tiempoIntervalo = 10  # minutos
+    # DATOS DE ANALISIS EN TIEMPO REAL
+
+    diaAnalizarIni = datetime.now() - timedelta(minutes=15)
+    diaAnalizarFin = datetime.now()
+
     diametroAnalizar = '45000' #en metros
 
-    tiempoIntervalo = 10 #minutos
+
 
     tiempoAnalizarIni = diaAnalizarIni
     tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
