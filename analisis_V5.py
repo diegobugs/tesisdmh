@@ -12,8 +12,6 @@ Obteniendo datos de medida de direccion de la celula
 """
 
 import pandas as pd
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
 from util import DatabaseConnection as db
 from util import PlotData as plt
 from datetime import datetime
@@ -83,8 +81,8 @@ if __name__ == '__main__':
     tiempoIntervalo = 10  # minutos
     # DATOS DE ANALISIS EN TIEMPO REAL
 
-    # diaAnalizarIni = datetime.now() - timedelta(minutes=15)
-    # diaAnalizarFin = datetime.now()
+    diaAnalizarIni = datetime.now() - timedelta(minutes=15)
+    diaAnalizarFin = datetime.now()
 
     diametroAnalizar = '45000' #en metros
 
@@ -242,6 +240,7 @@ if __name__ == '__main__':
                     tiempoDesplazamiento = HoraFinalCelula - HoraInicialCelula
                     tiempoDesplazamiento = tiempoDesplazamiento / timedelta(hours=1)
                     velocidad = distancia/tiempoDesplazamiento
+                    print("Se desplazó "+str(distancia)+"km en "+str(tiempoDesplazamiento)+" horas. A una velocidad de "+str(velocidad)+" km/h")
 
 
                     X = [point[0] for point in ArrayCentroides]
