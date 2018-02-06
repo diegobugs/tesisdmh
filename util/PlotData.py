@@ -15,10 +15,17 @@ class Plot:
         # urlat = -19.2862304688
 
 
+        # Central Box
         lllon = -58.5200500488
         urlon = -56.6290283203
         lllat = -26.2010377682
         urlat = -24.4271453401
+
+        # Encarnacion Box
+        lllon = -56.606127
+        urlon = -55.052012
+        lllat = -27.707004
+        urlat = -26.861432
 
         # [[[-62.75390625, -27.5082714139], [-54.1186523437, -27.5082714139], [-54.1186523437, -19.2074285268],
         #   [-62.75390625, -19.2074285268], [-62.75390625, -27.5082714139]]]
@@ -82,6 +89,10 @@ class Plot:
             self.m.plot(x, a * x + b)
             # plt.text(4, 10, 'r = {0:2.3f}'.format(r[0, 1]))
             # plt.text(4, 9, 'Y = {0:2.3f} X + {1:2.3f}'.format(a, b))
+        if type==4:
+            marker = '*'
+            markersize = 0.5
+            color="red"
 
         self.m.plot(x, y, marker, markersize=markersize, color=color)
 
