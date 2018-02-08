@@ -8,6 +8,10 @@ import json
 app = Flask(__name__)
 CORS(app)
 
+@app.route("/test", methods=['GET', 'POST'])
+def test():
+    return json.dumps({'success': True}), 200, {
+        'ContentType': 'application/json'}
 
 @app.route("/", methods=['GET', 'POST'])
 def index():
