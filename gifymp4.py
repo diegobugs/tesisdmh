@@ -1,5 +1,7 @@
 import glob
 import moviepy.editor as mpy
+# import imageio
+# imageio.plugins.ffmpeg.download()
 
 video_name = './png/tormenta'  ##nombre del archivo
 fps = 1

@@ -73,18 +73,18 @@ if __name__ == '__main__':
     inicio_de_tiempo = time.time()
     database_connection = db.DatabaseConnection()
     #  DATOS DE ANALISIS DE PRUEBA
-    diaAnalizarIni = datetime.strptime('2016-11-19 13:00:00', '%Y-%m-%d %H:%M:%S')
-    diaAnalizarFin = datetime.strptime('2016-11-19 18:56:59', '%Y-%m-%d %H:%M:%S')
-    # coordenadaAnalizar = '-57.606765,-25.284659' # Asuncion
-    coordenadaAnalizar = '-55.873211,-27.336775' # Encarnacion - Playa San Jose
+    diaAnalizarIni = datetime.strptime('2016-11-27 16:40:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarFin = datetime.strptime('2016-11-27 17:30:00', '%Y-%m-%d %H:%M:%S')
+    coordenadaAnalizar = '-57.606765,-25.284659' # Asuncion2
+    # coordenadaAnalizar = '-55.873211,-27.336775' # Encarnacion - Playa San Jose
 
     tiempoIntervalo = 10  # minutos
     # DATOS DE ANALISIS EN TIEMPO REAL
 
-    diaAnalizarIni = datetime.now() - timedelta(minutes=15)
-    diaAnalizarFin = datetime.now()
+    # diaAnalizarIni = datetime.now() - timedelta(minutes=15)
+    # diaAnalizarFin = datetime.now()
 
-    diametroAnalizar = '45000' #en metros
+    diametroAnalizar = '40000' #en metros
 
 
 
@@ -253,7 +253,7 @@ if __name__ == '__main__':
                     # plot(X, Y, 'o')
 
                     # Para dibujar la recta
-                    # plot = plt.Plot()
+                    plot = plt.Plot()
                     plot.drawIntoMap(X,Y,3)
 
 
@@ -265,21 +265,19 @@ if __name__ == '__main__':
                     # Dibujamos los datos para poder visualizarlos y ver si sería lógico
                     # considerar el ajuste usando un modelo lineal
                     # Coordenadas X e Y sobre la recta
-                    # (np.max(X), a * np.max(X) + b, '+')
+                    (np.max(X), a * np.max(X) + b, '+')
 
                     nueva_distancia = velocidad * 0.16  # velocidad de desplazamiento * tiempo esperado de llegada en horas
                     nuevo_x, nuevo_y = CalcularSigtePunto(np.min(X), a * np.min(X) + b, np.max(X),a* np.max(X) + b, nueva_distancia)
                     # plot = plt.Plot()
-                    plot.drawIntoMap(nuevo_x, nuevo_y, 4)
+                    # plot.drawIntoMap(nuevo_x, nuevo_y, 4)
                     fileName = "punto_futuro"
                     plot.saveToFile(fileName)
+                    plot = plt.Plot()
 
                     print("Se desplazó " + str(distancia) + "km en " + str(
                         tiempoDesplazamiento) + " horas. A una velocidad de " + str(
                         velocidad) + " km/h" + " nueva Lat:" + str(nuevo_x) + " Lon:" + str(nuevo_y))
-
-                    plot.saveToFile(fileName)
-                    plot = plt.Plot()
 
 
         tiempoAnalizarIni = tiempoAnalizarFin
