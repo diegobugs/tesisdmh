@@ -4,37 +4,10 @@ from util import DatabaseConnection as db
 from util import PlotData as plt
 from datetime import datetime
 from datetime import timedelta
+import numpy as np
 import time
 
-
-def predict_price(intencidad, densidad, precipi, x):
-
-    print("Predicción")
-
-    intencidad = np.reshape(intencidad,(len(intencidad), 2)) # converting to matrix of n X 1
-    # precipi = np.reshape(precipi, (len(precipi), 1))  # converting to matrix of n X 1
-
-    print("Final del Reshape")
-
-    # svr_lin = SVR(kernel= 'linear', C= 1e3)
-    # svr_poly = SVR(kernel= 'poly', C= 1e3, degree= 2)
-    svr_rbf = SVR(kernel= 'rbf', C= 1e3, gamma= 0.1) # defining the support vector regression models
-    svr_rbf.fit(intencidad, precipi,) # fitting the data points in the models
-    # svr_lin.fit(intencidad, precipi)
-    # svr_poly.fit(intencidad, precipi)
-
-    print("Final de rbf.fit")
-    plt.scatter(intencidad[0], precipi, color= 'black', label= 'Data') # plotting the initial datapoints
-    plt.plot(intencidad[0], svr_rbf.predict(intencidad), color= 'red', label= 'RBF model') # plotting the line made by the RBF kernel
-    # plt.plot(intencidad,svr_lin.predict(intencidad), color= 'green', label= 'Linear model') # plotting the line made by linear kernel
-    # plt.plot(intencidad,svr_poly.predict(intencidad), color= 'blue', label= 'Polynomial model') # plotting the line made by polynomial kernel
-    plt.xlabel('Intencidad')
-    plt.ylabel('Precipitaciones')
-    plt.title('Support Vector Regression')
-    plt.legend()
-    plt.show()
-
-    return svr_rbf.predict(x)[0] #, svr_lin.predict(x)[0], svr_poly.predict(x)[0]
+from sklearn import svm
 
 if __name__ == '__main__':
 
@@ -42,8 +15,8 @@ if __name__ == '__main__':
 
     database_connection = db.DatabaseConnection('190.128.205.75','rayos','cta','M9vNvgQ2=4os')
 
-    diaAnalizarIni = datetime.strptime('2014-04-11 04:00:00', '%Y-%m-%d %H:%M:%S')
-    diaAnalizarFin = datetime.strptime('2014-04-11 05:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarIni = datetime.strptime('2014-04-11 00:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarFin = datetime.strptime('2014-04-12 00:00:00', '%Y-%m-%d %H:%M:%S')
     coordenadaAnalizar = '-57.606765,-25.284659'  # Asuncion2
     tiempoIntervalo = 10  # minutos
     diametroAnalizar = '40000'  # en metros
@@ -82,11 +55,10 @@ if __name__ == '__main__':
                                 'valor_registrado', 'valor_corregido'])
     print("Inicio de bucle")
 
-    dates = []
-    intencidad = []
-    densidad = []
-    precipi = []
 
+    x = [0,1000000]
+    y = [0,10]
+    X = [[0,0],[0,1000000]]
     while tiempoAnalizarIni <= diaAnalizarFin:
         query = 'start_time >="' + datetime.strftime(tiempoAnalizarIni,'%Y-%m-%d %H:%M:%S') + '" and start_time<="' + datetime.strftime(tiempoAnalizarFin, '%Y-%m-%d %H:%M:%S') + '"'
         datosAnalisis = df.query(query)
@@ -149,34 +121,41 @@ if __name__ == '__main__':
 
 
         # Mostrar en pantalla Hora analizada, intensidad y densidad de descargas electricas
-
-        import csv
-        import numpy as np
-        from sklearn.svm import SVR
-        import matplotlib.pyplot as plt
-
-
-        dates.append(tiempoAnalizarIni)
-
-        intendensidad = [int(peak_current),int(qty)]
-        intencidad.append(intendensidad)
-        densidad.append(int(qty))
-        precipi.append(float(precipitacion))
-
-        if printPosibleWeather:
-            print("Hora " + str(tiempoAnalizarIni) + " Intensidad:" + str(peak_current) + " Densidad:" + str(qty)+" Precipitacion:"+str(precipitacion)+" Estaciones:"+str(qtyE))
+        # if printPosibleWeather:
+        #     print("Hora " + str(tiempoAnalizarIni) + " Intensidad:" + str(peak_current) + " Densidad:" + str(qty)+" Precipitacion:"+str(precipitacion)+" Estaciones:"+str(qtyE))
         # endif
+
+
+        x.append(precipitacion)
+        # y.append(peak_current)
+
+        X.append([precipitacion,peak_current])
+
+        if precipitacion>10:
+            a = 10
+        else:
+            a = 0
+
+        y.append(a)
+
+        clf = svm.SVC(kernel='linear', C=1.0)
+        clf.fit(X, y)
+
+        Z = [0, peak_current]
+        Z = np.reshape(Z, (1, -1))
+        prediccion = clf.predict(Z)
+
+        print("Hora " + str(tiempoAnalizarIni) + " Intensidad:" + str(peak_current) + " Densidad:" + str(
+            qty) + " Precipitacion:" + str(precipitacion) + " Predicción:" + ("Tormenta" if prediccion==10 else "Nada"))
+
+
+
 
         tiempoAnalizarIni = tiempoAnalizarFin
         tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
     #endwhile recorrido de tiempo de analisis
 
-
     tiempo_final = time.time()
     tiempo_transcurrido = tiempo_final - inicio_de_tiempo
-
-    predicted_price = predict_price(intencidad, densidad, precipi, 29)
-
     print("Tiempo transcurrido de análisis: " + str(tiempo_transcurrido) + " segundos")
     exit(0)
-
