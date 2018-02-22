@@ -147,7 +147,7 @@ if __name__ == '__main__':
 
 
         # Generar aprendizaje, agregar conocimiento al clf (Clasificador)
-        clf.fit(X, y)
+        # clf.fit(X, y)
 
 
 
@@ -171,7 +171,7 @@ if __name__ == '__main__':
     tiempo_transcurrido = tiempo_final - inicio_de_tiempo
     print("Tiempo transcurrido de análisis: " + str(tiempo_transcurrido) + " segundos")
     # joblib.dump(clf, 'modelo.pkl')
-    with open('model.pickle', 'wb') as f:
-        pickle.dump(clf,f)
+    # with open('model.pickle', 'wb') as f:
+    #     pickle.dump(clf,f)
 
     exit(0)
