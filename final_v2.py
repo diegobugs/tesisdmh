@@ -6,12 +6,15 @@ from datetime import datetime
 from datetime import timedelta
 import numpy as np
 import time
+# from sklearn.externals import joblib
+import pickle
 
 from sklearn import svm
 
 if __name__ == '__main__':
 
     inicio_de_tiempo = time.time()
+    print("Analisis iniciado: "+str(datetime.now()))
 
     database_connection = db.DatabaseConnection('190.128.205.75','rayos','cta','M9vNvgQ2=4os')
 
@@ -59,6 +62,13 @@ if __name__ == '__main__':
     x = [0,1000000]
     y = [0,10]
     X = [[0,0],[0,1000000]]
+
+    # Definir el aprendizaje
+
+    clf = svm.SVC(kernel='linear', C=1.0)
+    # pickle_in = open('model.pickle', 'rb')
+    # clf = pickle.load(pickle_in)
+    # clf = joblib.load('modelo.pkl')
     while tiempoAnalizarIni <= diaAnalizarFin:
         query = 'start_time >="' + datetime.strftime(tiempoAnalizarIni,'%Y-%m-%d %H:%M:%S') + '" and start_time<="' + datetime.strftime(tiempoAnalizarFin, '%Y-%m-%d %H:%M:%S') + '"'
         datosAnalisis = df.query(query)
@@ -131,18 +141,20 @@ if __name__ == '__main__':
 
         X.append([precipitacion,peak_current])
 
-        if precipitacion>10:
-            a = 10
-        else:
-            a = 0
+        a = 10 if precipitacion>10 else 0
 
         y.append(a)
 
-        clf = svm.SVC(kernel='linear', C=1.0)
+
+        # Generar aprendizaje, agregar conocimiento al clf (Clasificador)
         clf.fit(X, y)
+
+
 
         Z = [0, peak_current]
         Z = np.reshape(Z, (1, -1))
+
+        # Obtener una prediccion de tormenta del clasificador
         prediccion = clf.predict(Z)
 
         print("Hora " + str(tiempoAnalizarIni) + " Intensidad:" + str(peak_current) + " Densidad:" + str(
@@ -158,4 +170,8 @@ if __name__ == '__main__':
     tiempo_final = time.time()
     tiempo_transcurrido = tiempo_final - inicio_de_tiempo
     print("Tiempo transcurrido de análisis: " + str(tiempo_transcurrido) + " segundos")
+    # joblib.dump(clf, 'modelo.pkl')
+    with open('model.pickle', 'wb') as f:
+        pickle.dump(clf,f)
+
     exit(0)
