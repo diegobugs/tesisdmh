@@ -6,10 +6,10 @@ from datetime import datetime
 from datetime import timedelta
 import numpy as np
 import time
-# from sklearn.externals import joblib
-import pickle
-
+from sklearn.externals import joblib
+# import pickle
 from sklearn import svm
+import os.path
 
 if __name__ == '__main__':
 
@@ -18,8 +18,8 @@ if __name__ == '__main__':
 
     database_connection = db.DatabaseConnection('190.128.205.75','rayos','cta','M9vNvgQ2=4os')
 
-    diaAnalizarIni = datetime.strptime('2014-04-11 00:00:00', '%Y-%m-%d %H:%M:%S')
-    diaAnalizarFin = datetime.strptime('2014-04-12 00:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarIni = datetime.strptime('2015-05-03 00:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarFin = datetime.strptime('2015-05-04 00:00:00', '%Y-%m-%d %H:%M:%S')
     coordenadaAnalizar = '-57.606765,-25.284659'  # Asuncion2
     tiempoIntervalo = 10  # minutos
     diametroAnalizar = '40000'  # en metros
@@ -59,16 +59,18 @@ if __name__ == '__main__':
     print("Inicio de bucle")
 
 
-    x = [0,1000000]
     y = [0,10]
-    X = [[0,0],[0,1000000]]
+    X = [[0,0],[150,1000000]]
 
     # Definir el aprendizaje
 
-    clf = svm.SVC(kernel='linear', C=1.0)
-    # pickle_in = open('model.pickle', 'rb')
-    # clf = pickle.load(pickle_in)
-    # clf = joblib.load('modelo.pkl')
+    clf = svm.SVC(kernel='rbf', C=1.0, cache_size=500)
+    # clf = SVC(kernel='rbf', C=1.0)
+    # saveModel = False
+    if os.path.exists('modelo.sav'):
+        clf = joblib.load('modelo.sav')
+        # result = loaded_model.score(X_test, Y_test)
+
     while tiempoAnalizarIni <= diaAnalizarFin:
         query = 'start_time >="' + datetime.strftime(tiempoAnalizarIni,'%Y-%m-%d %H:%M:%S') + '" and start_time<="' + datetime.strftime(tiempoAnalizarFin, '%Y-%m-%d %H:%M:%S') + '"'
         datosAnalisis = df.query(query)
@@ -136,10 +138,10 @@ if __name__ == '__main__':
         # endif
 
 
-        x.append(precipitacion)
+        # x.append(precipitacion)
         # y.append(peak_current)
 
-        X.append([precipitacion,peak_current])
+        X.append([qty,peak_current])
 
         a = 10 if precipitacion>10 else 0
 
@@ -147,11 +149,14 @@ if __name__ == '__main__':
 
 
         # Generar aprendizaje, agregar conocimiento al clf (Clasificador)
+        # if not os.path.exists('modelo.sav'):
+            # clf = joblib.load('modelo.sav')
         # clf.fit(X, y)
+        # saveModel = True
 
 
 
-        Z = [0, peak_current]
+        Z = [qty, peak_current]
         Z = np.reshape(Z, (1, -1))
 
         # Obtener una prediccion de tormenta del clasificador
@@ -170,8 +175,7 @@ if __name__ == '__main__':
     tiempo_final = time.time()
     tiempo_transcurrido = tiempo_final - inicio_de_tiempo
     print("Tiempo transcurrido de análisis: " + str(tiempo_transcurrido) + " segundos")
-    # joblib.dump(clf, 'modelo.pkl')
-    # with open('model.pickle', 'wb') as f:
-    #     pickle.dump(clf,f)
+    # if saveModel == True:
+    #     joblib.dump(clf, 'modelo.sav')
 
     exit(0)
