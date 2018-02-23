@@ -10,16 +10,46 @@ from sklearn.externals import joblib
 # import pickle
 from sklearn import svm
 import os.path
+import csv
 
 if __name__ == '__main__':
+
+
+    # Definicion por defecto de los .csv
+    y = [0, 5, 10]
+    X = [[0, 0], [40, 500000], [80, 1000000]]
+
+
+    if not os.path.exists('dataset\clf_data.csv'):
+        pd.DataFrame(data=X).to_csv('dataset\clf_data.csv', sep=";", mode='w', index=False, header=False)
+    if not os.path.exists('dataset\clf_know.csv'):
+        pd.DataFrame(data=y).to_csv('dataset\clf_know.csv', sep=";", mode='w', index=False, header=False)
+
+    X = []
+    y = []
+    with open('dataset\clf_data.csv', 'rt') as clf_data:
+        spamreader = csv.reader(clf_data, delimiter=';')
+        for row in spamreader:
+            # print(row[0])
+            # [int(row) for row in spamreader]
+            X.append([int(row[0]),int(row[1])])
+            # print('\t'.join(row))
+
+    with open('dataset\clf_know.csv', 'rt') as clf_know:
+        spamreader = csv.reader(clf_know, delimiter=';')
+        for row in spamreader:
+            # print(row[0])
+            y.append(int(row[0]))
+
+
 
     inicio_de_tiempo = time.time()
     print("Analisis iniciado: "+str(datetime.now()))
 
     database_connection = db.DatabaseConnection('190.128.205.75','rayos','cta','M9vNvgQ2=4os')
 
-    diaAnalizarIni = datetime.strptime('2015-05-03 00:00:00', '%Y-%m-%d %H:%M:%S')
-    diaAnalizarFin = datetime.strptime('2015-05-04 00:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarIni = datetime.strptime('2015-05-03 06:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarFin = datetime.strptime('2015-05-03 10:00:00', '%Y-%m-%d %H:%M:%S')
     coordenadaAnalizar = '-57.606765,-25.284659'  # Asuncion2
     tiempoIntervalo = 10  # minutos
     diametroAnalizar = '40000'  # en metros
@@ -59,17 +89,20 @@ if __name__ == '__main__':
     print("Inicio de bucle")
 
 
-    y = [0,10]
-    X = [[0,0],[150,1000000]]
+
 
     # Definir el aprendizaje
 
-    clf = svm.SVC(kernel='rbf', C=1.0, cache_size=500)
+    # clf = svm.SVC(kernel='rbf', C=1.0, cache_size=500)
     # clf = SVC(kernel='rbf', C=1.0)
-    # saveModel = False
-    if os.path.exists('modelo.sav'):
-        clf = joblib.load('modelo.sav')
+    saveModel = False
+    # if os.path.exists('modelo.sav'):
+    clf = joblib.load('modelo.sav')
         # result = loaded_model.score(X_test, Y_test)
+
+
+    #
+    # exit(1)
 
     while tiempoAnalizarIni <= diaAnalizarFin:
         query = 'start_time >="' + datetime.strftime(tiempoAnalizarIni,'%Y-%m-%d %H:%M:%S') + '" and start_time<="' + datetime.strftime(tiempoAnalizarFin, '%Y-%m-%d %H:%M:%S') + '"'
@@ -143,7 +176,7 @@ if __name__ == '__main__':
 
         X.append([qty,peak_current])
 
-        a = 10 if precipitacion>10 else 0
+        a = 10 if precipitacion>10 else 5 if precipitacion>5 else 0
 
         y.append(a)
 
@@ -152,9 +185,7 @@ if __name__ == '__main__':
         # if not os.path.exists('modelo.sav'):
             # clf = joblib.load('modelo.sav')
         # clf.fit(X, y)
-        # saveModel = True
-
-
+        saveModel = True
 
         Z = [qty, peak_current]
         Z = np.reshape(Z, (1, -1))
@@ -162,11 +193,19 @@ if __name__ == '__main__':
         # Obtener una prediccion de tormenta del clasificador
         prediccion = clf.predict(Z)
 
-        print("Hora " + str(tiempoAnalizarIni) + " Intensidad:" + str(peak_current) + " Densidad:" + str(
-            qty) + " Precipitacion:" + str(precipitacion) + " Predicción:" + ("Tormenta" if prediccion==10 else "Nada"))
+        txt =("En fecha hora " + str(tiempoAnalizarIni) + " se tuvo una intensidad de " + str(peak_current) + "A en" + str(
+            qty) + " descargas eléctricas en donde luego de 50m a 1:30h se registró una precipitacion de" + str(precipitacion) + "mm y la predicción para esta fecha es " + ("+=10mm probabilidad de Tormentas severas" if prediccion==10 else "+=5mm probabilidad de Lluvias muy fuertes" if prediccion==5 else "+=0 probabilidad baja de lluvia"))
 
+        fileName = str(diaAnalizarIni).replace(":", "").replace(".", "") +"_"+ str(diaAnalizarFin).replace(":", "").replace(".", "")
+        data_analisis = []
+        data_analisis[1] = tiempoAnalizarIni
+        data_analisis[2] = peak_current
+        data_analisis[3] = qty
+        data_analisis[4] = precipitacion
+        data_analisis[5] = prediccion
+        data_analisis[6] = txt
 
-
+        pd.DataFrame(data=data_analisis, columns=['Fecha_Hora','Intensidad','Densidad','Precipitacion_Real','Clasificacion','Conclusion']).to_csv(fileName+".csv", sep=";", mode='a', index=False, header=False, quoting=csv.QUOTE_NONNUMERIC)
 
         tiempoAnalizarIni = tiempoAnalizarFin
         tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
@@ -175,7 +214,11 @@ if __name__ == '__main__':
     tiempo_final = time.time()
     tiempo_transcurrido = tiempo_final - inicio_de_tiempo
     print("Tiempo transcurrido de análisis: " + str(tiempo_transcurrido) + " segundos")
+
+
     # if saveModel == True:
     #     joblib.dump(clf, 'modelo.sav')
+    #     pd.DataFrame(data=X).to_csv('dataset\clf_data.csv', sep=";", mode='w', index=False, header=False)
+    #     pd.DataFrame(data=y).to_csv('dataset\clf_know.csv', sep=";", mode='w', index=False, header=False)
 
     exit(0)
