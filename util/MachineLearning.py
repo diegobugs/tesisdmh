@@ -21,8 +21,8 @@ class ML_SVM:
         self.saveModel = saveModel
 
         # Definicion por defecto de los .csv de conocimiento
-        y = [0, 10]
-        X = [[0, 0], [0, 1000000]]
+        y = [0, 5, 10]
+        X = [[0, 0], [40, 500000], [80, 1000000]]
         if not os.path.exists('dataset\clf_data.csv'):
             pd.DataFrame(data=X).to_csv('dataset\clf_data.csv', sep=";", mode='w', index=False, header=False)
         if not os.path.exists('dataset\clf_know.csv'):
@@ -41,7 +41,7 @@ class ML_SVM:
         # Definir el aprendizaje
         if self.saveModel == True:
             # Inicializar el clasificador
-            self.clf = svm.SVC(kernel='rbf', C=1.0, cache_size=500)
+            self.clf = svm.SVC(kernel='rbf', C=0.5, cache_size=1500)
         else:
             # Verificar que exista el modelo
             if os.path.exists('modelo.sav'):
@@ -49,7 +49,7 @@ class ML_SVM:
             else:
                 print("ALERTA: No existe el modelo. Se generará un nuevo modelo.")
                 self.saveModel = True
-                self.clf = svm.SVC(kernel='rbf', C=1.0, cache_size=500)
+                self.clf = svm.SVC(kernel='rbf', C=0.5, cache_size=1500)
 
 
 
@@ -64,6 +64,17 @@ class ML_SVM:
         self.X.append([densidad, intensidad])
         # y datos de aprendizaje [CANTIDAD DE LLUVIA LEIDA]
         self.y.append(clasif)
+
+
+        # Ordenar X
+        matrix = np.matrix(np.column_stack((self.X, self.y)))
+        matrix = matrix[np.argsort(matrix.A[:, 1])]
+
+        self.X = (np.delete(matrix, np.s_[2], axis=1)).tolist()
+        y = ((np.delete(matrix, np.s_[0:2], axis=1)).ravel()).tolist()
+        self.y = y[0]
+
+
 
         # Generar aprendizaje, agregar conocimiento al clf (Clasificador)
         # Si se guarda el modelo, se debe registrar nuevo conocimiento
@@ -150,6 +161,7 @@ class ML_SVM:
 
         analisis_data = []
         peak_currentAux = 0
+        nuevaCelula = True
         while tiempoAnalizarIni <= diaAnalizarFin:
             query = 'start_time >="' + datetime.strftime(tiempoAnalizarIni,
                                                          '%Y-%m-%d %H:%M:%S') + '" and start_time<="' + datetime.strftime(
@@ -170,7 +182,7 @@ class ML_SVM:
                     # endfor
             # endif hay datos de descargas
 
-            peak_current = math.ceil(peak_current / 1000) * 1000
+            peak_current = math.ceil(peak_current / 10000) * 10000
 
 
             precipitacion = 0  # Primer precipitacion en 0 por defecto
@@ -180,7 +192,7 @@ class ML_SVM:
             # # Las precipitaciones obtenidas entre 50 y 90 minutos luego del tiempo de descrgas eléctricas
             query = 'fecha_observacion >="' + datetime.strftime(tiempoAnalizarIni + timedelta(minutes=50),
                                                                 '%Y-%m-%d %H:%M:%S') + '" and fecha_observacion < "' + datetime.strftime(
-                tiempoAnalizarIni + timedelta(minutes=80), '%Y-%m-%d %H:%M:%S') + '"'
+                tiempoAnalizarIni + timedelta(minutes=90), '%Y-%m-%d %H:%M:%S') + '"'
             datosAnalisis = dfP.query(query)
 
             # Definición de variables para contar cantidad de estaciones utilizadas
@@ -194,25 +206,37 @@ class ML_SVM:
                     if precipitacion < row.valor_registrado:
                         precipitacion = row.valor_registrado
 
-            a = 10 if precipitacion > 10 else 0
-
-            if (qty>0 and peak_current>0):
-            # if 1==1:
-                prediccion = self.obtenerPrediccion(0,peak_current,a)
+            a = 10 if (precipitacion > 10 and peak_current>=1000000) else 0
 
 
-                # Texto generado para mostrar, dando una conclusion de la lectura
-                txt = (
-                    "En fecha hora " + str(tiempoAnalizarIni) + " se tuvo una intensidad de " + str(
-                        peak_current) + "A en " + str(
-                        qty) + " descargas eléctricas en donde luego de 50m a 1:30h se registró una precipitacion de " + str(
-                        precipitacion) + "mm y la predicción para esta fecha es " + (
-                        "+=10mm probabilidad de Tormentas severas" if prediccion == 10 else "+=5mm probabilidad de Lluvias muy fuertes" if prediccion == 5 else "+=0 probabilidad baja o nula de lluvias"))
 
 
-                analisis_data.append([tiempoAnalizarIni, peak_current, qty, precipitacion, prediccion, txt])
+            # Una vez dada la predicción de 10 = tormenta
+            # Esperar a que peak_current sea menor o igual a 40000 es decir, que sea otra ceula de tormenta, no la misma
+            # Ya que la misma celula puede mostrar una intensidad de 2M , 3M, 4M de amperios pero ya no indicar que luego de 1h lloverá +=10mm
+            if self.saveModel and peak_current <= 40000:
+                nuevaCelula = True
+            if nuevaCelula or self.saveModel==False:
+                if (qty>0 and peak_current>0):
+                # if 1==1:
+                    prediccion = self.obtenerPrediccion(0,peak_current,a)
 
-                print("Fecha/hora:"+str(tiempoAnalizarIni)+" Intensidad:"+str(peak_current)+" Densidad:"+str(qty)+" Precipitacion:"+str(precipitacion)+" Predicción:"+ ("Tormenta" if prediccion==10 else "Lluvia" if prediccion==5 else "Nada"))
+
+                    if self.saveModel and prediccion==10:
+                        nuevaCelula = False
+
+                    # Texto generado para mostrar, dando una conclusion de la lectura
+                    txt = (
+                        "En fecha hora " + str(tiempoAnalizarIni) + " se tuvo una intensidad de " + str(
+                            peak_current) + "A en " + str(
+                            qty) + " descargas eléctricas en donde luego de 50m a 1:30h se registró una precipitacion de " + str(
+                            precipitacion) + "mm y la predicción para esta fecha es " + (
+                            "+=10mm probabilidad de Tormentas severas" if prediccion == 10 else "+=5mm probabilidad de Lluvias muy fuertes" if prediccion == 5 else "+=0 probabilidad baja o nula de lluvias"))
+
+
+                    analisis_data.append([tiempoAnalizarIni, peak_current, qty, precipitacion, prediccion, txt])
+
+                    print("Fecha/hora:"+str(tiempoAnalizarIni)+" Intensidad:"+str(peak_current)+" Densidad:"+str(qty)+" Precipitacion:"+str(precipitacion)+" Predicción:"+ ("Tormenta" if prediccion==10 else "Lluvia" if prediccion==5 else "Nada"))
 
             peak_currentAux = peak_current
             # Nuevos tiempos a analizar
