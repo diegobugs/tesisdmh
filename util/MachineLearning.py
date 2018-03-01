@@ -8,6 +8,7 @@ from sklearn.externals import joblib
 from sklearn import svm
 import os.path
 import csv
+import math
 
 # Configuraciones por defecto
 # writeAnalisis = False  # Si queremos crear un .csv con conclusion y resumen del analisis
@@ -20,8 +21,8 @@ class ML_SVM:
         self.saveModel = saveModel
 
         # Definicion por defecto de los .csv de conocimiento
-        y = [0, 5, 10]
-        X = [[0, 0], [40, 500000], [80, 1000000]]
+        y = [0, 10]
+        X = [[0, 0], [0, 1000000]]
         if not os.path.exists('dataset\clf_data.csv'):
             pd.DataFrame(data=X).to_csv('dataset\clf_data.csv', sep=";", mode='w', index=False, header=False)
         if not os.path.exists('dataset\clf_know.csv'):
@@ -60,7 +61,7 @@ class ML_SVM:
 
         # Variables empleadas por el clasificador ML
         # X datos de información [intensidad,densidad]
-        self.X.append([intensidad, densidad])
+        self.X.append([densidad, intensidad])
         # y datos de aprendizaje [CANTIDAD DE LLUVIA LEIDA]
         self.y.append(clasif)
 
@@ -70,7 +71,7 @@ class ML_SVM:
             self.clf.fit(self.X, self.y)
 
         # Información leída para ser clasificada o predicha por ML
-        Z = [intensidad, densidad]  # densidad, intensidad
+        Z = [densidad, intensidad]  # densidad, intensidad
         # Establece una nueva estructura para el vector
         # Parametros VECTOR, NUEVA FORMA
         # El parametro -1 establece que no se sabe en cuantas columnas debe generar, por lo tanto Numpy se encarga del calculo
@@ -132,7 +133,7 @@ class ML_SVM:
                                    'number_of_sensors', 'ic_multiplicity', 'cg_multiplicity', 'geom'])
 
         # Conexion con base de datos de precipitaciones
-        database_connection = db.DatabaseConnection('localhost', 'precip', 'postgres', '12345')
+        database_connection = db.DatabaseConnection('precip', 'precip', 'postgres', '12345')
         print("Conectando a la base de datos...Precipitaciones")
         estaciones = "86218,86217,86214,86206,86207,86208"
         rows = database_connection.query(
@@ -148,6 +149,7 @@ class ML_SVM:
         print("Inicio de bucle")
 
         analisis_data = []
+        peak_currentAux = 0
         while tiempoAnalizarIni <= diaAnalizarFin:
             query = 'start_time >="' + datetime.strftime(tiempoAnalizarIni,
                                                          '%Y-%m-%d %H:%M:%S') + '" and start_time<="' + datetime.strftime(
@@ -168,6 +170,8 @@ class ML_SVM:
                     # endfor
             # endif hay datos de descargas
 
+            peak_current = math.ceil(peak_current / 1000) * 1000
+
 
             precipitacion = 0  # Primer precipitacion en 0 por defecto
             a = 0
@@ -176,7 +180,7 @@ class ML_SVM:
             # # Las precipitaciones obtenidas entre 50 y 90 minutos luego del tiempo de descrgas eléctricas
             query = 'fecha_observacion >="' + datetime.strftime(tiempoAnalizarIni + timedelta(minutes=50),
                                                                 '%Y-%m-%d %H:%M:%S') + '" and fecha_observacion < "' + datetime.strftime(
-                tiempoAnalizarIni + timedelta(minutes=90), '%Y-%m-%d %H:%M:%S') + '"'
+                tiempoAnalizarIni + timedelta(minutes=80), '%Y-%m-%d %H:%M:%S') + '"'
             datosAnalisis = dfP.query(query)
 
             # Definición de variables para contar cantidad de estaciones utilizadas
@@ -190,26 +194,27 @@ class ML_SVM:
                     if precipitacion < row.valor_registrado:
                         precipitacion = row.valor_registrado
 
-            a = 10 if precipitacion > 10 else 5 if precipitacion > 5 else 0
+            a = 10 if precipitacion > 10 else 0
+
+            if (qty>0 and peak_current>0):
+            # if 1==1:
+                prediccion = self.obtenerPrediccion(0,peak_current,a)
 
 
-            prediccion = self.obtenerPrediccion(qty,peak_current,a)
+                # Texto generado para mostrar, dando una conclusion de la lectura
+                txt = (
+                    "En fecha hora " + str(tiempoAnalizarIni) + " se tuvo una intensidad de " + str(
+                        peak_current) + "A en " + str(
+                        qty) + " descargas eléctricas en donde luego de 50m a 1:30h se registró una precipitacion de " + str(
+                        precipitacion) + "mm y la predicción para esta fecha es " + (
+                        "+=10mm probabilidad de Tormentas severas" if prediccion == 10 else "+=5mm probabilidad de Lluvias muy fuertes" if prediccion == 5 else "+=0 probabilidad baja o nula de lluvias"))
 
 
-            # Texto generado para mostrar, dando una conclusion de la lectura
-            txt = (
-                "En fecha hora " + str(tiempoAnalizarIni) + " se tuvo una intensidad de " + str(
-                    peak_current) + "A en " + str(
-                    qty) + " descargas eléctricas en donde luego de 50m a 1:30h se registró una precipitacion de " + str(
-                    precipitacion) + "mm y la predicción para esta fecha es " + (
-                    "+=10mm probabilidad de Tormentas severas" if prediccion == 10 else "+=5mm probabilidad de Lluvias muy fuertes" if prediccion == 5 else "+=0 probabilidad baja o nula de lluvias"))
+                analisis_data.append([tiempoAnalizarIni, peak_current, qty, precipitacion, prediccion, txt])
 
+                print("Fecha/hora:"+str(tiempoAnalizarIni)+" Intensidad:"+str(peak_current)+" Densidad:"+str(qty)+" Precipitacion:"+str(precipitacion)+" Predicción:"+ ("Tormenta" if prediccion==10 else "Lluvia" if prediccion==5 else "Nada"))
 
-            analisis_data.append([tiempoAnalizarIni, peak_current, qty, precipitacion, prediccion, txt])
-
-            print("Fecha/hora:"+str(tiempoAnalizarIni)+" Intensidad:"+str(peak_current)+" Densidad:"+str(qty)+" Precipitacion:"+str(precipitacion)+" Predicción:"+ ("Tormenta" if prediccion==10 else "Lluvia" if prediccion==5 else "Nada"))
-
-
+            peak_currentAux = peak_current
             # Nuevos tiempos a analizar
             tiempoAnalizarIni = tiempoAnalizarFin
             # Sumamos el tiempoIntervalo para continuar con el bucle
@@ -225,6 +230,8 @@ class ML_SVM:
         fileName = str(diaAnalizarIni).replace(":", "").replace(".", "") + "_" + str(diaAnalizarFin).replace(":",
                                                                                                              "").replace(
             ".", "")
+
+        analisis_data.append(["Tiempo transcurrido de análisis: " + str(tiempo_transcurrido) + " segundos", '','','','',''])
 
         pd.DataFrame(data=analisis_data,
                      columns=['Fecha_Hora', 'Intensidad', 'Densidad', 'Precipitacion_Real', 'Clasificacion',
