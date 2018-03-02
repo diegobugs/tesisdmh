@@ -22,7 +22,7 @@ class ML_SVM:
 
         # Definicion por defecto de los .csv de conocimiento
         y = [0, 5, 10]
-        X = [[0, 0], [40, 500000], [80, 1000000]]
+        X = [[0, 0], [0, 5], [0, 10]]
         if not os.path.exists('dataset\clf_data.csv'):
             pd.DataFrame(data=X).to_csv('dataset\clf_data.csv', sep=";", mode='w', index=False, header=False)
         if not os.path.exists('dataset\clf_know.csv'):
@@ -32,16 +32,16 @@ class ML_SVM:
         with open('dataset\clf_data.csv', 'rt') as clf_data:
             spamreader = csv.reader(clf_data, delimiter=';')
             for row in spamreader:
-                self.X.append([int(row[0]), int(row[1])])
+                self.X.append([float(row[0]), float(row[1])])
         with open('dataset\clf_know.csv', 'rt') as clf_know:
             spamreader = csv.reader(clf_know, delimiter=';')
             for row in spamreader:
-                self.y.append(int(row[0]))
+                self.y.append(float(row[0]))
 
         # Definir el aprendizaje
         if self.saveModel == True:
             # Inicializar el clasificador
-            self.clf = svm.SVC(kernel='rbf', C=0.5, cache_size=1500)
+            self.clf = svm.SVC(kernel='rbf', C=1, cache_size=5000,probability=True, class_weight='balanced')
         else:
             # Verificar que exista el modelo
             if os.path.exists('modelo.sav'):
@@ -49,7 +49,7 @@ class ML_SVM:
             else:
                 print("ALERTA: No existe el modelo. Se generará un nuevo modelo.")
                 self.saveModel = True
-                self.clf = svm.SVC(kernel='rbf', C=0.5, cache_size=1500)
+                self.clf = svm.SVC(kernel='rbf', C=1, cache_size=5000,probability=True, class_weight='balanced')
 
 
 
@@ -146,7 +146,7 @@ class ML_SVM:
         # Conexion con base de datos de precipitaciones
         database_connection = db.DatabaseConnection('precip', 'precip', 'postgres', '12345')
         print("Conectando a la base de datos...Precipitaciones")
-        estaciones = "86218,86217,86214,86206,86207,86208"
+        estaciones = "86218,86217,86214,86206,86207,86201"
         rows = database_connection.query(
             "SELECT codigo_estacion,nombre_estacion,latitud,longitud,fecha_observacion,valor_registrado,valor_corregido FROM precipitacion WHERE codigo_estacion IN (" + estaciones + ") AND fecha_observacion >= to_timestamp('" + str(
                 diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND fecha_observacion <= to_timestamp('" + str(
@@ -182,7 +182,9 @@ class ML_SVM:
                     # endfor
             # endif hay datos de descargas
 
-            peak_current = math.ceil(peak_current / 10000) * 10000
+            # poner los valores en base 100000, Ej: 1.000.000 = 10
+            peak_current = peak_current / 100000
+            # peak_current = math.ceil(peak_current / 10000) * 10000
 
 
             precipitacion = 0  # Primer precipitacion en 0 por defecto
@@ -192,7 +194,7 @@ class ML_SVM:
             # # Las precipitaciones obtenidas entre 50 y 90 minutos luego del tiempo de descrgas eléctricas
             query = 'fecha_observacion >="' + datetime.strftime(tiempoAnalizarIni + timedelta(minutes=50),
                                                                 '%Y-%m-%d %H:%M:%S') + '" and fecha_observacion < "' + datetime.strftime(
-                tiempoAnalizarIni + timedelta(minutes=90), '%Y-%m-%d %H:%M:%S') + '"'
+                tiempoAnalizarIni + timedelta(minutes=70), '%Y-%m-%d %H:%M:%S') + '"'
             datosAnalisis = dfP.query(query)
 
             # Definición de variables para contar cantidad de estaciones utilizadas
@@ -206,23 +208,20 @@ class ML_SVM:
                     if precipitacion < row.valor_registrado:
                         precipitacion = row.valor_registrado
 
-            a = 10 if (precipitacion > 10 and peak_current>=1000000) else 0
-
-
-
+            a = 10 if (precipitacion > 10 and peak_current > 1) else 5 if (precipitacion > 5) else 0
 
             # Una vez dada la predicción de 10 = tormenta
             # Esperar a que peak_current sea menor o igual a 40000 es decir, que sea otra ceula de tormenta, no la misma
             # Ya que la misma celula puede mostrar una intensidad de 2M , 3M, 4M de amperios pero ya no indicar que luego de 1h lloverá +=10mm
-            if self.saveModel and peak_current <= 40000:
+            if self.saveModel and peak_current <= 0.4:
                 nuevaCelula = True
             if nuevaCelula or self.saveModel==False:
-                if (qty>0 and peak_current>0):
+                if (qty>0 or peak_current>0 or precipitacion > 0):
                 # if 1==1:
                     prediccion = self.obtenerPrediccion(0,peak_current,a)
 
 
-                    if self.saveModel and prediccion==10:
+                    if self.saveModel and prediccion==10 and precipitacion > 9:
                         nuevaCelula = False
 
                     # Texto generado para mostrar, dando una conclusion de la lectura
