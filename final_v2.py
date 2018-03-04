@@ -70,13 +70,12 @@ writeAnalisis = True  # Si queremos crear un .csv con conclusion y resumen del a
 
 if __name__ == '__main__':
 
-    SVM = ML.ML_SVM(True)
-    plot = plt.Plot()
+    SVM = ML.ML_SVM(False)
 
     inicio_de_tiempo = time.time()
     #  DATOS DE ANALISIS DE PRUEBA
-    diaAnalizarIni = datetime.strptime('2015-05-03 06:00:00', '%Y-%m-%d %H:%M:%S')
-    diaAnalizarFin = datetime.strptime('2015-05-03 10:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarIni = datetime.strptime('2016-10-24 20:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarFin = datetime.strptime('2016-10-25 08:30:00', '%Y-%m-%d %H:%M:%S')
     coordenadaAnalizar = '-57.606765,-25.284659'  # Asuncion2
     # coordenadaAnalizar = '-55.873211,-27.336775' # Encarnacion - Playa San Jose
 
@@ -86,19 +85,15 @@ if __name__ == '__main__':
     # diaAnalizarIni = datetime.now() - timedelta(minutes=15)
     # diaAnalizarFin = datetime.now()
 
-    diametroAnalizar = '40000'  # en metros
-
-    tiempoAnalizarIni = diaAnalizarIni
-    tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
-
-    # Conexion a la base de datos de descargas electricas
-    database_connection = db.DatabaseConnection('190.128.205.75', 'rayos', 'cta', 'M9vNvgQ2=4os')
+    diametroAnalizar = '45000'  # en metros
 
     # Definicion de tiempos a ser analizados, estas variables iran iterando en un bucle segun el tiempoIntervalo
     tiempoAnalizarIni = diaAnalizarIni
     tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
 
     print("Conectando a la base de datos...Descargas")
+    # Conexion a la base de datos de descargas electricas
+    database_connection = db.DatabaseConnection('190.128.205.75', 'rayos', 'cta', 'M9vNvgQ2=4os')
     rows = database_connection.query(
         "SELECT start_time,end_time,type,latitude,longitude,peak_current,ic_height,number_of_sensors,ic_multiplicity,cg_multiplicity,geom FROM lightning_data WHERE type=1 AND ST_DistanceSphere(geom, ST_MakePoint(" + coordenadaAnalizar + ")) <= " + diametroAnalizar + "  AND start_time >= to_timestamp('" + str(
             diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND start_time <= to_timestamp('" + str(
@@ -110,24 +105,27 @@ if __name__ == '__main__':
                       columns=['start_time', 'end_time', 'type', 'latitude', 'longitude', 'peak_current', 'ic_height',
                                'number_of_sensors', 'ic_multiplicity', 'cg_multiplicity', 'geom'])
 
-    # Conexion con base de datos de precipitaciones
-    database_connection = db.DatabaseConnection('localhost', 'precip', 'postgres', '12345')
-    print("Conectando a la base de datos...Precipitaciones")
-    estaciones = "86218,86217,86214,86206,86207,86208"
-    rows = database_connection.query(
-        "SELECT codigo_estacion,nombre_estacion,latitud,longitud,fecha_observacion,valor_registrado,valor_corregido FROM precipitacion WHERE codigo_estacion IN (" + estaciones + ") AND fecha_observacion >= to_timestamp('" + str(
-            diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND fecha_observacion <= to_timestamp('" + str(
-            diaAnalizarFin) + "', 'YYYY-MM-DD HH24:MI:SS.MS')")
-    print("Conectado")
-
-    print("Preparando datos")
-    dfP = pd.DataFrame(data=rows,
-                       columns=['codigo_estacion', 'nombre_estacion', 'latitud', 'longitud', 'fecha_observacion',
-                                'valor_registrado', 'valor_corregido'])
+    # # Conexion con base de datos de precipitaciones
+    # database_connection = db.DatabaseConnection('localhost', 'precip', 'postgres', '12345')
+    # print("Conectando a la base de datos...Precipitaciones")
+    # estaciones = "86218,86217,86214,86206,86207,86201,86222"
+    # rows = database_connection.query(
+    #     "SELECT codigo_estacion,nombre_estacion,latitud,longitud,fecha_observacion,valor_registrado,valor_corregido FROM precipitacion WHERE codigo_estacion IN (" + estaciones + ") AND fecha_observacion >= to_timestamp('" + str(
+    #         diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND fecha_observacion <= to_timestamp('" + str(
+    #         diaAnalizarFin) + "', 'YYYY-MM-DD HH24:MI:SS.MS')")
+    # print("Conectado")
+    #
+    # print("Preparando datos")
+    # dfP = pd.DataFrame(data=rows,
+    #                    columns=['codigo_estacion', 'nombre_estacion', 'latitud', 'longitud', 'fecha_observacion',
+    #                             'valor_registrado', 'valor_corregido'])
     print("Inicio de bucle")
 
     analisis_data, ArrayCentroides = [], []
+    historialDescargas = [None] * 9
     while tiempoAnalizarIni <= diaAnalizarFin:
+
+        plot = plt.Plot()
 
         query = 'start_time >="' + datetime.strftime(tiempoAnalizarIni,
                                                      '%Y-%m-%d %H:%M:%S') + '" and start_time<="' + datetime.strftime(
@@ -142,189 +140,120 @@ if __name__ == '__main__':
         EvoPuntoInicial = []
         EvoPuntoFinal = []
         printPossibleWeather = False
+
+        histLatLon = []
         if not datosAnalisis.empty:
 
-            # Obtenemos las descargas electricas en el tiempo analizado
+            # Obtenemos las descargas eléctricas en el tiempo analizado
             for i, row in enumerate(datosAnalisis.itertuples(), 1):
                 peak_current += abs(row.peak_current)
+                histLatLon.append([row.latitude,row.longitude])
                 densidad += 1
 
-            # @todo Consultar solamente si se va a generar un nuevo modelo o se va a analizar datos historicos, para tiempo real es inncesesario
-            # Consulta de precipitaciones
-            # Las precipitaciones obtenidas entre 50 y 90 minutos luego del tiempo de descrgas eléctricas
-            query = 'fecha_observacion >="' + datetime.strftime(tiempoAnalizarIni + timedelta(minutes=50),
-                                                                '%Y-%m-%d %H:%M:%S') + '" and fecha_observacion < "' + datetime.strftime(
-                tiempoAnalizarIni + timedelta(minutes=90), '%Y-%m-%d %H:%M:%S') + '"'
-            datosAnalisisPrecip = dfP.query(query)
+            # poner los valores en base 100000, Ej: 1.000.000 = 10
+            peak_current = peak_current / 100000
+            peak_current = round(peak_current, 1)
 
-            # Definición de variables para contar cantidad de estaciones utilizadas
-            qtyE = 0  # Cantidad de estaciones usadas
-            precipitacion = 0  # Primer precipitacion en 0 por defecto
-            if not datosAnalisisPrecip.empty:
-                # Bucle de cada precipitacion
-                for i, row in enumerate(datosAnalisisPrecip.itertuples(), 1):
-                    qtyE += 1
-                    # Se obtiene la mayor cantidad de precipitacion obtenida en el rango de tiempo establecido 50/90 mins
-                    if precipitacion < row.valor_registrado:
-                        precipitacion = row.valor_registrado
+            # Obtenemos la predicción generada por MachineLearning.py
+            prediccion = SVM.obtenerPrediccion(0, peak_current)
 
-            a = 10 if precipitacion >= 10 else 5 if precipitacion >= 5 else 0
+            printPossibleWeather = True if prediccion == 10 else False
 
-            # Predicción del tiempo según densidad e intensidad de descargas electricas en tiempo recorrido
-            prediccion = SVM.obtenerPrediccion(densidad, peak_current, a)
-            printPossibleWeather = True if prediccion >= 5 else False
+            # @TODO registrar en un array las descargas 1h30m antes, es decir un array de 9 datos de descargas, el cual será consultado para generar la trayectoria
+            if histLatLon:
+                for idx, item in enumerate(historialDescargas):
+                    historialDescargas.insert(idx, histLatLon)
+                    historialDescargas.pop()
+                    break
+
+            # Si hablamos de otra celula, resetamos el historico de descargas
+            if peak_current <= 0.5:
+                historialDescargas = [None] * 9
 
             # Si la predicción da como una posible tormenta, se debe plotear la tormenta y su evolución
             if printPossibleWeather:
+
                 # Si supera los 1.000.000 de pico de corriente
-                # Generar poligono de los ultimos 90 minutos
-                tiempoTormentaIni = tiempoAnalizarIni - timedelta(minutes=90)
-                database_connection = db.DatabaseConnection('190.128.205.75', 'rayos', 'cta', 'M9vNvgQ2=4os')
-                # rs = database_connection.query(
-                #     "SELECT start_time,end_time,type,latitude,longitude,peak_current,ic_height,number_of_sensors,ic_multiplicity,cg_multiplicity,geom FROM lightning_data WHERE type=1 AND ST_DistanceSphere(geom, ST_MakePoint(" + coordenadaAnalizar + ")) <= " + "60000" + "  AND start_time >= to_timestamp('" + str(
-                #         diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND start_time <= to_timestamp('" + str(
-                #         diaAnalizarFin) + "', 'YYYY-MM-DD HH24:MI:SS.MS')")
-                # dff = pd.DataFrame(data=rs, columns=['start_time', 'end_time', 'type', 'latitude', 'longitude',
-                #                                      'peak_current', 'ic_height', 'number_of_sensors',
-                #                                      'ic_multiplicity', 'cg_multiplicity', 'geom'])
-                #
-                # if HoraFinalCelula is None:
-                #     HoraFinalCelula = tiempoAnalizarIni
-                #
-                # # Recorrer estado de tormentas 90 minutos antes
-                # ArrayCentroides = []
-                # while tiempoTormentaIni <= tiempoAnalizarIni:
-                #     tiempoTormentaFin = tiempoTormentaIni + timedelta(minutes=10)
-                #     query = 'start_time >="' + datetime.strftime(tiempoTormentaIni,
-                #                                                  '%Y-%m-%d %H:%M:%S') + '" and start_time<="' + datetime.strftime(
-                #         tiempoTormentaFin, '%Y-%m-%d %H:%M:%S') + '"'
-                #     tormentaAnalisis = dff.query(query)
-                #     if not datosAnalisis.empty:
-                #         fileName = False
-                #         points = []
-                #         qty = 0
-                #         for k, r in enumerate(tormentaAnalisis.itertuples(), 1):
-                #             qty += 1
-                #             plot.drawIntoMap(r.longitude, r.latitude, r.type)
-                #             points.append([r.longitude, r.latitude])
-                #             if not fileName:
-                #                 # Convertir hora UTC a hora local UTC -3
-                #                 horaEvento = r.start_time
-                #                 # horaEvento = row.start_time - timedelta(hours=3)
-                #                 fileName = str(horaEvento).replace(":", "").replace(".", "")
-                #                 fileName = "celula_inicial_" + fileName
-                #                 if HoraInicialCelula is None:
-                #                     HoraInicialCelula = horaEvento
-                #
-                #         if fileName:
-                #             # points = np.array(points)
-                #             points = np.array(points)
-                #
-                #             if qty >= 3:
-                #                 hull = ConvexHull(points, qhull_options="QJ")
-                #                 plot.draw(points, hull)
-                #                 # Get centroid
-                #                 cx = np.mean(hull.points[hull.vertices, 0])
-                #                 cy = np.mean(hull.points[hull.vertices, 1])
-                #
-                #                 if not EvoPuntoInicial:
-                #                     EvoPuntoInicial = [cx, cy]
-                #
-                #                 EvoPuntoFinal = [cx, cy]
-                #
-                #                 ArrayCentroides.append([cx, cy])
-                #
-                #                 # Una vez tengamos el centroid debemos ir tomando diferentes poligonos en un lapso de 15-20 minutos atras del 1000000 miliampereos
-                #                 # obtener lo sigiente:
-                #                 # velocidad segun distancia del primer poligono al ultimo en los 15-20 minutos
-                #                 # distancia del futuro punto en 20 minutos
-                #                 # angulo de curvatura entre ultimo, anteoultimo y penultimo poligono
-                #
-                #                 # print("Centroid X:"+str(cx)+" Centroid Y:"+str(cy))
-                #                 plot.drawIntoMap(cx, cy, 2)
-                #
-                #             plot.saveToFile(fileName)
-                #             plot = plt.Plot()
-                #
-                #     tiempoTormentaIni = tiempoTormentaFin
+                # Generar poligono de los ultimos 90 minutos, o de los ultimos 9 registros consultados
 
-                # print("########")
-                # print("Posible evento severo. Amperaje de:", peak_current)
-                # plot.drawIntoMap(row.longitude, row.latitude, row.type)
-                # # Convertir hora UTC a hora local UTC -3
-                # # horaEvento = row.start_time - timedelta(hours=3)
-                # # print(horaEvento)
-                # fileName = str(row.start_time).replace(":", "").replace(".", "")
-                # plot.saveToFile(fileName)
-                # plot = plt.Plot()
-                # print("Inicio:"+str(EvoPuntoInicial)+" final:"+str(EvoPuntoFinal))
+                if HoraFinalCelula is None:
+                    HoraFinalCelula = tiempoAnalizarIni
 
-                # fileName = False
-                # qty = 0
-                # points = []
-                # for i, row in enumerate(datosAnalisis.itertuples(), 1):
-                #     plot.drawIntoMap(row.longitude, row.latitude, row.type)
-                #     qty += 1
-                #     points.append([row.longitude, row.latitude])
-                #     if not fileName:
-                #         # Convertir hora UTC a hora local UTC -3
-                #         horaEvento = row.start_time
-                #         horaEvento = row.start_time - timedelta(hours=3)
-                #         fileName = str(horaEvento).replace(":", "").replace(".", "")
-                # points = np.array(points)
-                # hull = ConvexHull(points)
-                # plot.draw(points, hull)
-                #
-                # # Get centroid
-                # cx = np.mean(hull.points[hull.vertices, 0])
-                # cy = np.mean(hull.points[hull.vertices, 1])
-                #
-                # if ArrayCentroides:
-                #     ArrayCentroides.append([cx, cy])
-                #
-                # # Una vez tengamos el centroid debemos ir tomando diferentes poligonos en un lapso de 15-20 minutos atras del 1000000 miliampereos
-                # # obtener lo sigiente:
-                # # velocidad segun distancia del primer poligono al ultimo en los 15-20 minutos
-                # # distancia del futuro punto en 20 minutos
-                # # angulo de curvatura entre ultimo, anteoultimo y penultimo poligono
-                #
-                # # print("Centroid X:"+str(cx)+" Centroid Y:"+str(cy))
-                # plot.drawIntoMap(cx, cy, 2)
-                #
-                # plot.saveToFile(fileName)
-                # plot = plt.Plot()
+                # Recorrer estado de tormentas 90 minutos antes
+                ArrayCentroides = []
 
-            # if EvoPuntoFinal and EvoPuntoInicial:
-            #     distancia = MedirDistancia(EvoPuntoInicial[0], EvoPuntoInicial[1], EvoPuntoFinal[0], EvoPuntoFinal[1])
-            #     if HoraInicialCelula and HoraFinalCelula:
-            #         tiempoDesplazamiento = HoraFinalCelula - HoraInicialCelula
-            #         tiempoDesplazamiento = tiempoDesplazamiento / timedelta(hours=1)
-            #         velocidad = distancia / tiempoDesplazamiento
-            #         print("Se desplazó " + str(distancia) + "km en " + str(
-            #             tiempoDesplazamiento) + " horas. A una velocidad de " + str(velocidad) + " km/h")
-            #
-            #         X = [point[0] for point in ArrayCentroides]
-            #         X = np.array(X)
-            #         Y = [point[1] for point in ArrayCentroides]
-            #         Y = np.array(Y)
-            #
-            #         # Dibujamos los datos para poder visualizarlos y ver si sería lógico
-            #         # considerar el ajuste usando un modelo lineal
-            #         # plot(X, Y, 'o')
-            #
-            #         # Para dibujar la recta
-            #         plot = plt.Plot()
-            #         plot.drawIntoMap(X, Y, 3)
-            #
-            #         # Calculamos los coeficientes del ajuste (a X + b)
-            #         a, b = np.polyfit(X, Y, 1)
-            #         # Calculamos el coeficiente de correlación
-            #         r = np.corrcoef(X, Y)
-            #         # Dibujamos los datos para poder visualizarlos y ver si sería lógico
-            #         # considerar el ajuste usando un modelo lineal
-            #         # Coordenadas X e Y sobre la recta
-            #         (np.max(X), a * np.max(X) + b, '+')
-            #
+
+                for idx, item in enumerate(historialDescargas):
+                    fileName = "CELULA_"+str(idx)
+                    plotCel = plt.Plot()
+                    points = []
+
+
+                    if item is not None:
+                        for k, r in enumerate(item):
+                            plotCel.drawIntoMap(r[1], r[0], 1)
+                            points.append([r[1], r[0]])
+
+                    # Si hay descargas eléctricas
+                    if points:
+                        points = np.array(points)
+
+                        # Generamos un poligono que contenga todas las descargas electricas
+                        hull = ConvexHull(points, qhull_options="QJ")
+                        plotCel.draw(points, hull)
+
+                        # Obtenemos el centroide de nuestro poligono
+                        cx = np.mean(hull.points[hull.vertices, 0])
+                        cy = np.mean(hull.points[hull.vertices, 1])
+
+                        # Si no existe un punto inicial de la tormenta, asignamos
+                        if not EvoPuntoInicial:
+                            EvoPuntoInicial = [cx, cy]
+
+                        # El punto final de nuestra tormenta es el ultimo dato consultado
+                        EvoPuntoFinal = [cx, cy]
+
+                        # Generamos un array con todos nuestros centroides
+                        ArrayCentroides.append([cx, cy])
+
+                        # Dibujamos los centroides en el mapa
+                        plotCel.drawIntoMap(cx, cy, 2)
+
+                    # Imprimimos en una imagen cada una de las 9 celulas
+                    plotCel.saveToFile(fileName)
+
+                # Si tenemos un inicio y un fin de nuestra tormenta
+                if EvoPuntoFinal and EvoPuntoInicial and ArrayCentroides:
+                    # distancia = MedirDistancia(EvoPuntoInicial[0], EvoPuntoInicial[1], EvoPuntoFinal[0], EvoPuntoFinal[1])
+                    # if HoraInicialCelula and HoraFinalCelula:
+                    #     tiempoDesplazamiento = HoraFinalCelula - HoraInicialCelula
+                    #     tiempoDesplazamiento = tiempoDesplazamiento / timedelta(hours=1)
+                    #     velocidad = distancia / tiempoDesplazamiento
+                    #     print("Se desplazó " + str(distancia) + "km en " + str(
+                    #         tiempoDesplazamiento) + " horas. A una velocidad de " + str(velocidad) + " km/h")
+
+                    X = [point[0] for point in ArrayCentroides]
+                    X = np.array(X)
+                    Y = [point[1] for point in ArrayCentroides]
+                    Y = np.array(Y)
+
+                    # Dibujamos los datos para poder visualizarlos y ver si sería lógico
+                    # considerar el ajuste usando un modelo lineal
+                    # plot(X, Y, 'o')
+
+                    # Para dibujar la recta
+                    plotRecta = plt.Plot()
+                    plotRecta.drawIntoMap(X, Y, 3)
+
+                    # Calculamos los coeficientes del ajuste (a X + b)
+                    a, b = np.polyfit(X, Y, 1)
+                    # Calculamos el coeficiente de correlación
+                    r = np.corrcoef(X, Y)
+                    # Dibujamos los datos para poder visualizarlos y ver si sería lógico
+                    # considerar el ajuste usando un modelo lineal
+                    # Coordenadas X e Y sobre la recta
+                    (np.max(X), a * np.max(X) + b, '+')
+
             #         nueva_distancia = velocidad * 0.16  # velocidad de desplazamiento * tiempo esperado de llegada en horas
             #         nuevo_x, nuevo_y = CalcularSigtePunto(np.min(X), a * np.min(X) + b, np.max(X), a * np.max(X) + b,
             #                                               nueva_distancia)
@@ -340,33 +269,28 @@ if __name__ == '__main__':
 
             # Texto generado para mostrar, dando una conclusion de la lectura
             txt = (
-                "En fecha hora " + str(tiempoAnalizarIni) + " se tuvo una intensidad de " + str(
-                    peak_current) + "A en " + str(
-                    densidad) + " descargas eléctricas en donde luego de 50m a 1:30h se registró una precipitacion de " + str(
-                    precipitacion) + "mm y la predicción para esta fecha es " + (
-                    "+=10mm probabilidad de Tormentas severas" if prediccion == 10 else "+=5mm probabilidad de "
-                                                                                        "Lluvias muy fuertes" if
-                    prediccion == 5 else "+=0 probabilidad baja o nula de lluvias"))
-
-            # Si queremos guardar el análisis en un .csv
-            if writeAnalisis:
-                fileName = str(diaAnalizarIni).replace(":", "").replace(".", "") + "_" + str(
-                    diaAnalizarFin).replace(":",
-                                            "").replace(
-                    ".", "")
-                analisis_data.append([tiempoAnalizarIni, peak_current, densidad, precipitacion, prediccion, txt])
-                pd.DataFrame(data=analisis_data,
-                             columns=['Fecha_Hora', 'Intensidad', 'Densidad', 'Precipitacion_Real',
-                                      'Clasificacion',
-                                      'Conclusion']).to_csv("analisis/" + fileName + ".csv", sep=";", mode='a',
-                                                            index=False,
-                                                            header=False, quoting=csv.QUOTE_NONNUMERIC)
+                "En fecha hora " + str(tiempoAnalizarIni) + " se tuvo una intensidad de " + str(peak_current) + "A en " + str(densidad) + " descargas eléctricas en donde luego de 50m a 1h:10m la predicción es " + ("+=10mm probabilidad de Tormentas severas" if prediccion == 10 else "+=5mm probabilidad de Lluvias muy fuertes" if prediccion == 5 else "+=0 probabilidad baja o nula de lluvias"))
+            analisis_data.append([tiempoAnalizarIni, peak_current, densidad, prediccion, txt])
 
         tiempoAnalizarIni = tiempoAnalizarFin
-        tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
+        tiempoAnalizarFin = tiempoAnalizarFin + timedelta(minutes=tiempoIntervalo)
     # plot.printMap()
 
-    SVM.guardarModelo()
+    # SVM.guardarModelo()
+
+    # Si queremos guardar el análisis en un .csv
+    if writeAnalisis:
+        fileName = "Analisis_" + str(diaAnalizarIni).replace(":", "").replace(".", "") + "_" + str(
+            diaAnalizarFin).replace(":",
+                                    "").replace(
+            ".", "")
+
+        pd.DataFrame(data=analisis_data,
+                     columns=['Fecha_Hora', 'Intensidad', 'Densidad',
+                              'Clasificacion',
+                              'Conclusion']).to_csv("analisis/" + fileName + ".csv", sep=";", mode='a',
+                                                    index=False,
+                                                    header=False, quoting=csv.QUOTE_NONNUMERIC)
 
     tiempo_final = time.time()
     tiempo_transcurrido = tiempo_final - inicio_de_tiempo

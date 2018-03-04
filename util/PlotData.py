@@ -71,7 +71,7 @@ class Plot:
             color = "red"
         if type==2:
             marker = 'o' #centro
-            markersize = 0.4
+            markersize = 0.2
             color = "green"
         if type==3:
             marker = 'o'  # centro
@@ -91,14 +91,14 @@ class Plot:
             # plt.text(4, 9, 'Y = {0:2.3f} X + {1:2.3f}'.format(a, b))
         if type==4:
             marker = '*'
-            markersize = 0.5
+            markersize = 0.3
             color="red"
 
         self.m.plot(x, y, marker, markersize=markersize, color=color)
 
     def saveToFile(self,fileName="img_"+time.strftime("%Y%m%d-%H%M%S%M"),extension="png"):
         plt.title(fileName)
-        plt.savefig("png/"+fileName+"."+extension,dpi=600)
+        plt.savefig("png/"+fileName+"."+extension,dpi=300)
         plt.close()
 
 

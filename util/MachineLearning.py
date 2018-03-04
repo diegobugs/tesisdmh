@@ -41,7 +41,7 @@ class ML_SVM:
         # Definir el aprendizaje
         if self.saveModel == True:
             # Inicializar el clasificador
-            self.clf = svm.SVC(kernel='rbf', C=1, cache_size=5000,probability=True, class_weight='balanced')
+            self.clf = svm.SVC(kernel='rbf', C=1, cache_size=5000, probability=True, class_weight='balanced')
         else:
             # Verificar que exista el modelo
             if os.path.exists('modelo.sav'):
@@ -49,7 +49,7 @@ class ML_SVM:
             else:
                 print("ALERTA: No existe el modelo. Se generará un nuevo modelo.")
                 self.saveModel = True
-                self.clf = svm.SVC(kernel='rbf', C=1, cache_size=5000,probability=True, class_weight='balanced')
+                self.clf = svm.SVC(kernel='rbf', C=1, cache_size=5000, probability=True, class_weight='balanced')
 
 
 
@@ -146,7 +146,7 @@ class ML_SVM:
         # Conexion con base de datos de precipitaciones
         database_connection = db.DatabaseConnection('precip', 'precip', 'postgres', '12345')
         print("Conectando a la base de datos...Precipitaciones")
-        estaciones = "86218,86217,86214,86206,86207,86201"
+        estaciones = "86218,86217,86214,86206,86207,86201,86222"
         rows = database_connection.query(
             "SELECT codigo_estacion,nombre_estacion,latitud,longitud,fecha_observacion,valor_registrado,valor_corregido FROM precipitacion WHERE codigo_estacion IN (" + estaciones + ") AND fecha_observacion >= to_timestamp('" + str(
                 diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND fecha_observacion <= to_timestamp('" + str(
@@ -184,6 +184,7 @@ class ML_SVM:
 
             # poner los valores en base 100000, Ej: 1.000.000 = 10
             peak_current = peak_current / 100000
+            peak_current = round(peak_current,1)
             # peak_current = math.ceil(peak_current / 10000) * 10000
 
 
@@ -193,7 +194,7 @@ class ML_SVM:
             # # Consulta de precipitaciones
             # # Las precipitaciones obtenidas entre 50 y 90 minutos luego del tiempo de descrgas eléctricas
             query = 'fecha_observacion >="' + datetime.strftime(tiempoAnalizarIni + timedelta(minutes=50),
-                                                                '%Y-%m-%d %H:%M:%S') + '" and fecha_observacion < "' + datetime.strftime(
+                                                                '%Y-%m-%d %H:%M:%S') + '" and fecha_observacion <= "' + datetime.strftime(
                 tiempoAnalizarIni + timedelta(minutes=70), '%Y-%m-%d %H:%M:%S') + '"'
             datosAnalisis = dfP.query(query)
 
@@ -211,9 +212,9 @@ class ML_SVM:
             a = 10 if (precipitacion > 10 and peak_current > 1) else 5 if (precipitacion > 5) else 0
 
             # Una vez dada la predicción de 10 = tormenta
-            # Esperar a que peak_current sea menor o igual a 40000 es decir, que sea otra ceula de tormenta, no la misma
+            # Esperar a que peak_current sea menor o igual a 50000 es decir, que sea otra ceula de tormenta, no la misma
             # Ya que la misma celula puede mostrar una intensidad de 2M , 3M, 4M de amperios pero ya no indicar que luego de 1h lloverá +=10mm
-            if self.saveModel and peak_current <= 0.4:
+            if self.saveModel and peak_current <= 0.5:
                 nuevaCelula = True
             if nuevaCelula or self.saveModel==False:
                 if (qty>0 or peak_current>0 or precipitacion > 0):
