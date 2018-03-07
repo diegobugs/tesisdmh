@@ -146,7 +146,8 @@ class ML_SVM:
         # Conexion con base de datos de precipitaciones
         database_connection = db.DatabaseConnection('precip', 'precip', 'postgres', '12345')
         print("Conectando a la base de datos...Precipitaciones")
-        estaciones = "86218,86217,86214,86206,86207,86201,86222"
+        # estaciones = "86218,86217,86214,86206,86207,86201,86222"
+        estaciones = "86246,86248"
         rows = database_connection.query(
             "SELECT codigo_estacion,nombre_estacion,latitud,longitud,fecha_observacion,valor_registrado,valor_corregido FROM precipitacion WHERE codigo_estacion IN (" + estaciones + ") AND fecha_observacion >= to_timestamp('" + str(
                 diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND fecha_observacion <= to_timestamp('" + str(
@@ -217,7 +218,7 @@ class ML_SVM:
             if self.saveModel and peak_current <= 0.5:
                 nuevaCelula = True
             if nuevaCelula or self.saveModel==False:
-                if (qty>0 or peak_current>0 or precipitacion > 0):
+                if (qty>0 or peak_current>0 or precipitacion > 0) and (precipitacion>0.5 or peak_current > 0):
                 # if 1==1:
                     prediccion = self.obtenerPrediccion(0,peak_current,a)
 
