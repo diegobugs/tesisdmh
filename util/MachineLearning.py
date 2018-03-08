@@ -21,8 +21,8 @@ class ML_SVM:
         self.saveModel = saveModel
 
         # Definicion por defecto de los .csv de conocimiento
-        y = [0, 5, 10]
-        X = [[0, 0], [0, 5], [0, 10]]
+        y = [0, 5, 5, 10, 5]
+        X = [[0, 0], [0, 5], [4, 5], [4, 10], [9, 10]]
         if not os.path.exists('dataset\clf_data.csv'):
             pd.DataFrame(data=X).to_csv('dataset\clf_data.csv', sep=";", mode='w', index=False, header=False)
         if not os.path.exists('dataset\clf_know.csv'):
@@ -146,7 +146,7 @@ class ML_SVM:
         # Conexion con base de datos de precipitaciones
         database_connection = db.DatabaseConnection('precip', 'precip', 'postgres', '12345')
         print("Conectando a la base de datos...Precipitaciones")
-        estaciones = "86218,86217,86214,86206,86207,86201,86222"
+        estaciones = "86218,86217,86214,86206,86207,86201"
         # estaciones = "86246,86248"
         rows = database_connection.query(
             "SELECT codigo_estacion,nombre_estacion,latitud,longitud,fecha_observacion,valor_registrado,valor_corregido FROM precipitacion WHERE codigo_estacion IN (" + estaciones + ") AND fecha_observacion >= to_timestamp('" + str(
@@ -163,6 +163,7 @@ class ML_SVM:
         analisis_data = []
         peak_currentAux = 0
         nuevaCelula = True
+        historialDescargas = [None] * 9
         while tiempoAnalizarIni <= diaAnalizarFin:
             query = 'start_time >="' + datetime.strftime(tiempoAnalizarIni,
                                                          '%Y-%m-%d %H:%M:%S') + '" and start_time<="' + datetime.strftime(
@@ -172,12 +173,14 @@ class ML_SVM:
             peak_current = 0  # Corriente pico INTENSIDAD
             qty = 0  # Cantidad de rayos DENSIDAD
 
-            # Si el dataset de descargas no se encuentra vacío
+            # Si el dataset de descargas no se encuentra vacío\
+            histLatLon = []
             if not datosAnalisis.empty:
                 # Bucle de cada rayo
 
                 # Obtener INTENSIDAD Y DENSIDAD
                 for i, row in enumerate(datosAnalisis.itertuples(), 1):
+                    histLatLon.append([row.latitude, row.longitude])
                     peak_current += abs(row.peak_current)
                     qty += 1
                     # endfor
@@ -212,15 +215,26 @@ class ML_SVM:
 
             a = 10 if (precipitacion > 10 and peak_current > 1) else 5 if (precipitacion > 5) else 0
 
+
+            if histLatLon:
+                for idx, item in enumerate(historialDescargas):
+                    historialDescargas.insert(idx, histLatLon)
+                    historialDescargas.pop()
+                    break
+
             # Una vez dada la predicción de 10 = tormenta
             # Esperar a que peak_current sea menor o igual a 50000 es decir, que sea otra ceula de tormenta, no la misma
             # Ya que la misma celula puede mostrar una intensidad de 2M , 3M, 4M de amperios pero ya no indicar que luego de 1h lloverá +=10mm
             if self.saveModel and peak_current <= 0.5:
                 nuevaCelula = True
+                historialDescargas = [None] * 9
+
             if nuevaCelula or self.saveModel==False:
                 if (qty>0 or peak_current>0 or precipitacion > 0) and (precipitacion>0.6 or peak_current > 0):
                 # if 1==1:
-                    prediccion = self.obtenerPrediccion(0,peak_current,a)
+
+                    qtyCells = (sum(x is not None for x in historialDescargas))
+                    prediccion = self.obtenerPrediccion(qtyCells,peak_current,a)
 
 
                     if self.saveModel and prediccion==10 and precipitacion > 9:

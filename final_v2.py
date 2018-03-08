@@ -21,50 +21,6 @@ import numpy as np
 import time
 import csv
 
-
-def CalcularSigtePunto(y1, x1, y2, x2, distancia):
-    from math import sin, cos, atan
-    # Prueba N 1
-    print("x1:" + str(x1) + " y1:" + str(y1))
-    print("x2:" + str(x2) + " y2:" + str(y2))
-    print("distancia:" + str(distancia))
-
-    xv = x2 - x1
-    yv = y2 - y1
-
-    angulo = atan(yv - xv)
-
-    print("angulo: " + str(angulo))
-
-    x = x2 + distancia * sin(angulo)
-    y = y2 + distancia * sin(angulo)
-
-    return x, y
-
-
-def MedirDistancia(lat, lon, latt, lonn):
-    from math import sin, cos, sqrt, atan2, radians, atan, degrees
-
-    # approximate radius of earth in km
-    R = 6373.0
-
-    lat1 = radians(lat)
-    lon1 = radians(lon)
-    lat2 = radians(latt)
-    lon2 = radians(lonn)
-
-    dlon = lon2 - lon1
-    dlat = lat2 - lat1
-
-    a = sin(dlat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(dlon / 2) ** 2
-    c = 2 * atan2(sqrt(a), sqrt(1 - a))
-
-    distance = R * c
-
-    return distance
-    # print("Distancia:", distance)
-
-
 # Configuraciones por defecto
 writeAnalisis = True  # Si queremos crear un .csv con conclusion y resumen del analisis
 
@@ -74,9 +30,9 @@ if __name__ == '__main__':
 
     inicio_de_tiempo = time.time()
     #  DATOS DE ANALISIS DE PRUEBA
-    diaAnalizarIni = datetime.strptime('2016-10-24 20:00:00', '%Y-%m-%d %H:%M:%S')
-    diaAnalizarFin = datetime.strptime('2016-10-25 08:30:00', '%Y-%m-%d %H:%M:%S')
-    coordenadaAnalizar = '-57.606765,-25.284659'  # Asuncion2
+    diaAnalizarIni = datetime.strptime('2016-11-27 14:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarFin = datetime.strptime('2016-11-27 18:00:00', '%Y-%m-%d %H:%M:%S')
+    coordenadaAnalizar = '-57.606765,-25.284659'  # Asuncion
     # coordenadaAnalizar = '-55.873211,-27.336775' # Encarnacion - Playa San Jose
 
     tiempoIntervalo = 10  # minutos
@@ -182,45 +138,57 @@ if __name__ == '__main__':
                 # Recorrer estado de tormentas 90 minutos antes
                 ArrayCentroides = []
 
+                qtyCells = (sum(x is not None for x in historialDescargas))
 
-                for idx, item in enumerate(historialDescargas):
-                    fileName = "CELULA_"+str(idx)
-                    plotCel = plt.Plot()
-                    points = []
+                if qtyCells <= 4:
+                    print(str(tiempoAnalizarFin)+" tormenta en 1h "+str(tiempoAnalizarFin + timedelta(minutes=60)))
 
 
-                    if item is not None:
-                        for k, r in enumerate(item):
-                            plotCel.drawIntoMap(r[1], r[0], 1)
-                            points.append([r[1], r[0]])
 
-                    # Si hay descargas eléctricas
-                    if points:
-                        points = np.array(points)
+                if qtyCells >= 8:
+                    for idx, item in enumerate(historialDescargas):
+                        fileName = str(tiempoAnalizarFin).replace(":", "").replace(".", "")
+                        fileName = "CELULA_"+fileName+str(idx)
+                        plotCel = plt.Plot()
+                        points = []
 
-                        # Generamos un poligono que contenga todas las descargas electricas
-                        hull = ConvexHull(points, qhull_options="QJ")
-                        plotCel.draw(points, hull)
 
-                        # Obtenemos el centroide de nuestro poligono
-                        cx = np.mean(hull.points[hull.vertices, 0])
-                        cy = np.mean(hull.points[hull.vertices, 1])
 
-                        # Si no existe un punto inicial de la tormenta, asignamos
-                        if not EvoPuntoInicial:
-                            EvoPuntoInicial = [cx, cy]
+                        if item is not None:
+                            for k, r in enumerate(item):
+                                plotCel.drawIntoMap(r[1], r[0], 1)
+                                points.append([r[1], r[0]])
 
-                        # El punto final de nuestra tormenta es el ultimo dato consultado
-                        EvoPuntoFinal = [cx, cy]
+                        # Si hay descargas eléctricas
+                        saveFile = False
+                        if points and len(points) >= 3:
+                            saveFile = True
+                            points = np.array(points)
 
-                        # Generamos un array con todos nuestros centroides
-                        ArrayCentroides.append([cx, cy])
+                            # Generamos un poligono que contenga todas las descargas electricas
+                            hull = ConvexHull(points, qhull_options="QJ")
+                            plotCel.draw(points, hull)
 
-                        # Dibujamos los centroides en el mapa
-                        plotCel.drawIntoMap(cx, cy, 2)
+                            # Obtenemos el centroide de nuestro poligono
+                            cx = np.mean(hull.points[hull.vertices, 0])
+                            cy = np.mean(hull.points[hull.vertices, 1])
 
-                    # Imprimimos en una imagen cada una de las 9 celulas
-                    plotCel.saveToFile(fileName)
+                            # Si no existe un punto inicial de la tormenta, asignamos
+                            if not EvoPuntoInicial:
+                                EvoPuntoInicial = [cx, cy]
+
+                            # El punto final de nuestra tormenta es el ultimo dato consultado
+                            EvoPuntoFinal = [cx, cy]
+
+                            # Generamos un array con todos nuestros centroides
+                            ArrayCentroides.append([cx, cy])
+
+                            # Dibujamos los centroides en el mapa
+                            plotCel.drawIntoMap(cx, cy, 2)
+
+                        # Imprimimos en una imagen cada una de las 9 celulas
+                        if saveFile:
+                            plotCel.saveToFile(fileName)
 
                 # Si tenemos un inicio y un fin de nuestra tormenta
                 if EvoPuntoFinal and EvoPuntoInicial and ArrayCentroides:

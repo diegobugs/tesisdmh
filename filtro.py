@@ -16,6 +16,8 @@ with open('dataset\clf_know.csv', 'rt') as clf_know:
     for row in spamreader:
         y.append(float(row[0]))
 
+print(len(X))
+exit()
 
 idx=0
 for i in X:

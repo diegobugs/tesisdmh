@@ -3,6 +3,10 @@ from sklearn.externals import joblib
 from sklearn import svm
 import csv
 
+lst = [1,2,3,None,2]
+print(sum(x is not None for x in lst))
+exit()
+
 # historialDescargas = [None] * 9
 #
 # print("Longitud del array "+str(len(historialDescargas)))
@@ -83,7 +87,7 @@ clf = joblib.load('modelo.sav')
 
 
 # [[0,20], [0,2], [0,70],[0,100],[0,6]]
-Z = [0, 2]
+Z = [0, 10]
 Z = np.reshape(Z, (1, -1))
 
 
