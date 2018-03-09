@@ -33,8 +33,8 @@ if __name__ == '__main__':
 
     inicio_de_tiempo = time.time()
     #  DATOS DE ANALISIS DE PRUEBA
-    diaAnalizarIni = datetime.strptime('2016-11-27 10:00:00', '%Y-%m-%d %H:%M:%S')
-    diaAnalizarFin = datetime.strptime('2016-11-27 20:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarIni = datetime.strptime('2016-10-24 22:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarFin = datetime.strptime('2016-10-25 01:00:00', '%Y-%m-%d %H:%M:%S')
     coordenadaAnalizar = '-57.606765,-25.284659'  # Asuncion
     # coordenadaAnalizar = '-55.873211,-27.336775' # Encarnacion - Playa San Jose
 
@@ -272,9 +272,9 @@ if __name__ == '__main__':
 
 
     if os.path.exists('png/RECTA*.png'):
-        video_name = 'png/tormenta'  ##nombre del archivo
+        video_name = './png/tormenta'  ##nombre del archivo
         fps = 1
-        file_list = glob.glob('png/RECTA*.png')  # obtiene los png de la ruta actual
+        file_list = glob.glob('./png/RECTA*.png')  # obtiene los png de la ruta actual
         # list.sort(file_list, key=lambda x: int(x.split('_')[1].split('.png')[0])) # Sort the images by #, this may need to be tweaked for your use case
         clip = mpy.ImageSequenceClip(file_list, fps=fps)
         clip.write_videofile('{}.mp4'.format(video_name), fps=fps)
