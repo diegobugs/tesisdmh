@@ -20,6 +20,9 @@ from scipy.spatial import ConvexHull
 import numpy as np
 import time
 import csv
+import glob
+import moviepy.editor as mpy
+import os.path
 
 # Configuraciones por defecto
 writeAnalisis = True  # Si queremos crear un .csv con conclusion y resumen del analisis
@@ -30,8 +33,8 @@ if __name__ == '__main__':
 
     inicio_de_tiempo = time.time()
     #  DATOS DE ANALISIS DE PRUEBA
-    diaAnalizarIni = datetime.strptime('2016-11-27 14:00:00', '%Y-%m-%d %H:%M:%S')
-    diaAnalizarFin = datetime.strptime('2016-11-27 18:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarIni = datetime.strptime('2016-11-27 10:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarFin = datetime.strptime('2016-11-27 20:00:00', '%Y-%m-%d %H:%M:%S')
     coordenadaAnalizar = '-57.606765,-25.284659'  # Asuncion
     # coordenadaAnalizar = '-55.873211,-27.336775' # Encarnacion - Playa San Jose
 
@@ -110,10 +113,6 @@ if __name__ == '__main__':
             peak_current = peak_current / 100000
             peak_current = round(peak_current, 1)
 
-            # Obtenemos la predicción generada por MachineLearning.py
-            prediccion = SVM.obtenerPrediccion(0, peak_current)
-
-            printPossibleWeather = True if prediccion == 10 else False
 
             # @TODO registrar en un array las descargas 1h30m antes, es decir un array de 9 datos de descargas, el cual será consultado para generar la trayectoria
             if histLatLon:
@@ -126,6 +125,13 @@ if __name__ == '__main__':
             if peak_current <= 0.5:
                 historialDescargas = [None] * 9
 
+            qtyCells = (sum(x is not None for x in historialDescargas))
+
+            # Obtenemos la predicción generada por MachineLearning.py
+            prediccion = SVM.obtenerPrediccion(qtyCells, peak_current)
+
+            printPossibleWeather = True if prediccion == 10 else False
+
             # Si la predicción da como una posible tormenta, se debe plotear la tormenta y su evolución
             if printPossibleWeather:
 
@@ -135,17 +141,17 @@ if __name__ == '__main__':
                 if HoraFinalCelula is None:
                     HoraFinalCelula = tiempoAnalizarIni
 
-                # Recorrer estado de tormentas 90 minutos antes
+
                 ArrayCentroides = []
 
-                qtyCells = (sum(x is not None for x in historialDescargas))
 
                 if qtyCells <= 4:
                     print(str(tiempoAnalizarFin)+" tormenta en 1h "+str(tiempoAnalizarFin + timedelta(minutes=60)))
 
 
-
-                if qtyCells >= 8:
+                # if qtyCells >= 8:
+                if qtyCells >= 3:
+                    # Recorrer estado de tormentas 90 minutos antes
                     for idx, item in enumerate(historialDescargas):
                         fileName = str(tiempoAnalizarFin).replace(":", "").replace(".", "")
                         fileName = "CELULA_"+fileName+str(idx)
@@ -161,6 +167,7 @@ if __name__ == '__main__':
 
                         # Si hay descargas eléctricas
                         saveFile = False
+
                         if points and len(points) >= 3:
                             saveFile = True
                             points = np.array(points)
@@ -190,50 +197,53 @@ if __name__ == '__main__':
                         if saveFile:
                             plotCel.saveToFile(fileName)
 
-                # Si tenemos un inicio y un fin de nuestra tormenta
-                if EvoPuntoFinal and EvoPuntoInicial and ArrayCentroides:
-                    # distancia = MedirDistancia(EvoPuntoInicial[0], EvoPuntoInicial[1], EvoPuntoFinal[0], EvoPuntoFinal[1])
-                    # if HoraInicialCelula and HoraFinalCelula:
-                    #     tiempoDesplazamiento = HoraFinalCelula - HoraInicialCelula
-                    #     tiempoDesplazamiento = tiempoDesplazamiento / timedelta(hours=1)
-                    #     velocidad = distancia / tiempoDesplazamiento
-                    #     print("Se desplazó " + str(distancia) + "km en " + str(
-                    #         tiempoDesplazamiento) + " horas. A una velocidad de " + str(velocidad) + " km/h")
+            # Si tenemos un inicio y un fin de nuestra tormenta
+            if EvoPuntoFinal and EvoPuntoInicial and ArrayCentroides:
+                # distancia = MedirDistancia(EvoPuntoInicial[0], EvoPuntoInicial[1], EvoPuntoFinal[0], EvoPuntoFinal[1])
+                # if HoraInicialCelula and HoraFinalCelula:
+                #     tiempoDesplazamiento = HoraFinalCelula - HoraInicialCelula
+                #     tiempoDesplazamiento = tiempoDesplazamiento / timedelta(hours=1)
+                #     velocidad = distancia / tiempoDesplazamiento
+                #     print("Se desplazó " + str(distancia) + "km en " + str(
+                #         tiempoDesplazamiento) + " horas. A una velocidad de " + str(velocidad) + " km/h")
 
-                    X = [point[0] for point in ArrayCentroides]
-                    X = np.array(X)
-                    Y = [point[1] for point in ArrayCentroides]
-                    Y = np.array(Y)
+                X = [point[0] for point in ArrayCentroides]
+                X = np.array(X)
+                Y = [point[1] for point in ArrayCentroides]
+                Y = np.array(Y)
 
-                    # Dibujamos los datos para poder visualizarlos y ver si sería lógico
-                    # considerar el ajuste usando un modelo lineal
-                    # plot(X, Y, 'o')
+                # Dibujamos los datos para poder visualizarlos y ver si sería lógico
+                # considerar el ajuste usando un modelo lineal
+                # plot(X, Y, 'o')
 
-                    # Para dibujar la recta
-                    plotRecta = plt.Plot()
-                    plotRecta.drawIntoMap(X, Y, 3)
+                # Para dibujar la recta
+                fileName = str(tiempoAnalizarFin).replace(":", "").replace(".", "")
+                fileName = "RECTA_" + fileName
+                plotRecta = plt.Plot()
+                plotRecta.drawIntoMap(X, Y, 3)
 
-                    # Calculamos los coeficientes del ajuste (a X + b)
-                    a, b = np.polyfit(X, Y, 1)
-                    # Calculamos el coeficiente de correlación
-                    r = np.corrcoef(X, Y)
-                    # Dibujamos los datos para poder visualizarlos y ver si sería lógico
-                    # considerar el ajuste usando un modelo lineal
-                    # Coordenadas X e Y sobre la recta
-                    (np.max(X), a * np.max(X) + b, '+')
+                # Calculamos los coeficientes del ajuste (a X + b)
+                a, b = np.polyfit(X, Y, 1)
+                # Calculamos el coeficiente de correlación
+                r = np.corrcoef(X, Y)
+                # Dibujamos los datos para poder visualizarlos y ver si sería lógico
+                # considerar el ajuste usando un modelo lineal
+                # Coordenadas X e Y sobre la recta
+                (np.max(X), a * np.max(X) + b, '+')
 
-            #         nueva_distancia = velocidad * 0.16  # velocidad de desplazamiento * tiempo esperado de llegada en horas
-            #         nuevo_x, nuevo_y = CalcularSigtePunto(np.min(X), a * np.min(X) + b, np.max(X), a * np.max(X) + b,
-            #                                               nueva_distancia)
-            #         # plot = plt.Plot()
-            #         # plot.drawIntoMap(nuevo_x, nuevo_y, 4)
-            #         fileName = "punto_futuro"
-            #         plot.saveToFile(fileName)
-            #         plot = plt.Plot()
-            #
-            #         print("Se desplazó " + str(distancia) + "km en " + str(
-            #             tiempoDesplazamiento) + " horas. A una velocidad de " + str(
-            #             velocidad) + " km/h" + " nueva Lat:" + str(nuevo_x) + " Lon:" + str(nuevo_y))
+                # nueva_distancia = velocidad * 0.16  # velocidad de desplazamiento * tiempo esperado de llegada en horas
+                # nuevo_x, nuevo_y = CalcularSigtePunto(np.min(X), a * np.min(X) + b, np.max(X), a * np.max(X) + b,
+                #                                       nueva_distancia)
+                # # plot = plt.Plot()
+                # # plot.drawIntoMap(nuevo_x, nuevo_y, 4)
+                # fileName = "punto_futuro"
+                #
+                plot.saveToFile(fileName)
+                # plot = plt.Plot()
+                #
+                # print("Se desplazó " + str(distancia) + "km en " + str(
+                #     tiempoDesplazamiento) + " horas. A una velocidad de " + str(
+                #     velocidad) + " km/h" + " nueva Lat:" + str(nuevo_x) + " Lon:" + str(nuevo_y))
 
             # Texto generado para mostrar, dando una conclusion de la lectura
             txt = (
@@ -259,6 +269,15 @@ if __name__ == '__main__':
                               'Conclusion']).to_csv("analisis/" + fileName + ".csv", sep=";", mode='a',
                                                     index=False,
                                                     header=False, quoting=csv.QUOTE_NONNUMERIC)
+
+
+    if os.path.exists('png/RECTA*.png'):
+        video_name = 'png/tormenta'  ##nombre del archivo
+        fps = 1
+        file_list = glob.glob('png/RECTA*.png')  # obtiene los png de la ruta actual
+        # list.sort(file_list, key=lambda x: int(x.split('_')[1].split('.png')[0])) # Sort the images by #, this may need to be tweaked for your use case
+        clip = mpy.ImageSequenceClip(file_list, fps=fps)
+        clip.write_videofile('{}.mp4'.format(video_name), fps=fps)
 
     tiempo_final = time.time()
     tiempo_transcurrido = tiempo_final - inicio_de_tiempo

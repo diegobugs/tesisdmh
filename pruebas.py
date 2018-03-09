@@ -2,9 +2,9 @@ import numpy as np
 from sklearn.externals import joblib
 from sklearn import svm
 import csv
+import math
 
-lst = [1,2,3,None,2]
-print(sum(x is not None for x in lst))
+
 exit()
 
 # historialDescargas = [None] * 9

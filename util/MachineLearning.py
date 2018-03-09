@@ -213,7 +213,7 @@ class ML_SVM:
                     if precipitacion < row.valor_registrado:
                         precipitacion = row.valor_registrado
 
-            a = 10 if (precipitacion > 10 and peak_current > 1) else 5 if (precipitacion > 5) else 0
+
 
 
             if histLatLon:
@@ -232,7 +232,7 @@ class ML_SVM:
             if nuevaCelula or self.saveModel==False:
                 if (qty>0 or peak_current>0 or precipitacion > 0) and (precipitacion>0.6 or peak_current > 0):
                 # if 1==1:
-
+                    a = 10 if (precipitacion > 10 and peak_current > 1 and qty <= 4) else 5 if (precipitacion > 5) else 0
                     qtyCells = (sum(x is not None for x in historialDescargas))
                     prediccion = self.obtenerPrediccion(qtyCells,peak_current,a)
 
