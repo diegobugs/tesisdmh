@@ -4,7 +4,7 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 import tensorflow as tf
 
-# Model parameters
+# Parametros del modelo
 W = tf.Variable([.3], tf.float32)
 b = tf.Variable([-.3], tf.float32)
 
@@ -16,11 +16,11 @@ linear_model = W * x + b
 y = tf.placeholder(tf.float32)
 
 
-# Loss
+# Perdida
 squared_delta = tf.square(linear_model - y)
 loss = tf.reduce_sum(squared_delta)
 
-# Optimizer
+# Optimizador
 optimizer = tf.train.GradientDescentOptimizer(0.01)
 train = optimizer.minimize(loss)
 

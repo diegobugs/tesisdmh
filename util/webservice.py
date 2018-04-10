@@ -23,10 +23,8 @@ def index():
     hfin = request.values['hfin']
 
 
-
     return json.dumps({'success': True, 'tormenta': False, 'src': src}), 200, {
         'ContentType': 'application/json'}
-
 
 if __name__ == "__main__":
     app.run(debug=True)

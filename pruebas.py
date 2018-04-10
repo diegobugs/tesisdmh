@@ -1,11 +1,32 @@
 import numpy as np
+from mpl_toolkits.basemap import Basemap
+import matplotlib.pyplot as plt
 from sklearn.externals import joblib
-from sklearn import svm
-import csv
-import math
-
-
-exit()
+#
+# # Coordenadas de Encarnación
+# lllon = -56.533893
+# urlon = -55.134718
+# lllat = -27.735085
+# urlat = -26.688416
+#
+# # Calculo del punto central para la proyección
+# centerlon = float(lllon + urlon) / 2.0
+# centerlat = float(lllat + urlat) / 2.0
+#
+# m = Basemap(resolution='i', llcrnrlon=lllon, urcrnrlon=urlon, lon_0=centerlon,
+#         llcrnrlat=lllat, urcrnrlat=urlat, lat_0=centerlat, projection='tmerc')
+# # Lectura de los bordes departamentales en un archivo SHP
+# shp_info = m.readshapefile('dataset/shp/PRY_adm1', 'states',
+#                        drawbounds=True, color='black')
+#
+# # Dibujar coordenadas
+# m.drawmeridians(np.arange(urlon,lllon,-.5),labels=[0,1,1,0])
+# m.drawparallels(np.arange(urlat,lllat,-.5),labels=[1,0,0,1])
+#
+# # Mostrar gráfico
+# plt.show()
+#
+# exit()
 
 # historialDescargas = [None] * 9
 #
@@ -38,16 +59,16 @@ exit()
 
 # X = [[0,10], [0,4.5], [0,7.5],[0,12.6],[0,7.8],[0,0],[0,0.4], [0,15], [0, 11],[0,8],[0,13] ,[0,26], [0,16.4], [0,9.6] ,[0,0.051], [0,0.91],[0,0.014]]
 # y = [10,  0, 0, 10, 0, 0, 0, 10,10,0,10,10, 10, 10, 0, 0, 0]
-# #
-X, y = [], []
-with open('dataset\clf_data.csv', 'rt') as clf_data:
-    spamreader = csv.reader(clf_data, delimiter=';')
-    for row in spamreader:
-        X.append([float(row[0]), float(row[1])])
-with open('dataset\clf_know.csv', 'rt') as clf_know:
-    spamreader = csv.reader(clf_know, delimiter=';')
-    for row in spamreader:
-        y.append(float(row[0]))
+# # #
+# X, y = [], []
+# with open('dataset\clf_data.csv', 'rt') as clf_data:
+#     spamreader = csv.reader(clf_data, delimiter=';')
+#     for row in spamreader:
+#         X.append([float(row[0]), float(row[1])])
+# with open('dataset\clf_know.csv', 'rt') as clf_know:
+#     spamreader = csv.reader(clf_know, delimiter=';')
+#     for row in spamreader:
+#         y.append(float(row[0]))
 
 # print(X)
 # print(y)

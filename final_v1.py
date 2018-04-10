@@ -5,7 +5,7 @@ from util import PlotData as plt
 from datetime import datetime
 from datetime import timedelta
 import time
-
+import csv
 
 if __name__ == '__main__':
 
@@ -13,11 +13,11 @@ if __name__ == '__main__':
 
     database_connection = db.DatabaseConnection('190.128.205.75','rayos','cta','M9vNvgQ2=4os')
 
-    diaAnalizarIni = datetime.strptime('2014-04-11 00:00:00', '%Y-%m-%d %H:%M:%S')
-    diaAnalizarFin = datetime.strptime('2014-04-12 00:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarIni = datetime.strptime('2016-11-27 13:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarFin = datetime.strptime('2016-11-27 17:00:00', '%Y-%m-%d %H:%M:%S')
     coordenadaAnalizar = '-57.606765,-25.284659'  # Asuncion2
     tiempoIntervalo = 10  # minutos
-    diametroAnalizar = '40000'  # en metros
+    diametroAnalizar = '45000'  # en metros
 
     tiempoAnalizarIni = diaAnalizarIni
     tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
@@ -52,6 +52,7 @@ if __name__ == '__main__':
                        columns=['codigo_estacion', 'nombre_estacion', 'latitud', 'longitud', 'fecha_observacion',
                                 'valor_registrado', 'valor_corregido'])
     print("Inicio de bucle")
+    analisis_data = []
     while tiempoAnalizarIni <= diaAnalizarFin:
         query = 'start_time >="' + datetime.strftime(tiempoAnalizarIni,'%Y-%m-%d %H:%M:%S') + '" and start_time<="' + datetime.strftime(tiempoAnalizarFin, '%Y-%m-%d %H:%M:%S') + '"'
         datosAnalisis = df.query(query)
@@ -97,7 +98,7 @@ if __name__ == '__main__':
 
 
         # Consulta de precipitaciones
-        query = 'fecha_observacion >="' + datetime.strftime(tiempoAnalizarIni + timedelta(minutes=50),'%Y-%m-%d %H:%M:%S') + '" and fecha_observacion < "' + datetime.strftime(tiempoAnalizarIni + timedelta(minutes=90), '%Y-%m-%d %H:%M:%S') + '"'
+        query = 'fecha_observacion >="' + datetime.strftime(tiempoAnalizarIni + timedelta(minutes=0),'%Y-%m-%d %H:%M:%S') + '" and fecha_observacion < "' + datetime.strftime(tiempoAnalizarIni + timedelta(minutes=10), '%Y-%m-%d %H:%M:%S') + '"'
         datosAnalisis = dfP.query(query)
         precipitacion = 0
         qtyE = 0 #Cantidad de estaciones usadas
@@ -112,6 +113,8 @@ if __name__ == '__main__':
 
                 # print(str(row.nombre_estacion)+" "+str(row.fecha_observacion)+" "+str(row.valor_registrado))
 
+        analisis_data.append([tiempoAnalizarIni, peak_current, precipitacion])
+
 
         # Mostrar en pantalla Hora analizada, intensidad y densidad de descargas electricas
         if printPosibleWeather:
@@ -120,6 +123,16 @@ if __name__ == '__main__':
 
         tiempoAnalizarIni = tiempoAnalizarFin
         tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
+
+    fileName = "Analisis_" + str(diaAnalizarIni).replace(":", "").replace(".", "") + "_" + str(
+        diaAnalizarFin).replace(":",
+                                "").replace(
+        ".", "")
+
+    pd.DataFrame(data=analisis_data,
+                 columns=['Fecha_Hora', 'Intensidad', 'Precipitacion']).to_csv("analisis/" + fileName + ".csv", sep=";", mode='a',
+                                                index=False,
+                                                header=False, quoting=csv.QUOTE_NONNUMERIC)
     #endwhile recorrido de tiempo de analisis
 
     tiempo_final = time.time()

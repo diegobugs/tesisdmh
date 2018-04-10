@@ -22,9 +22,9 @@ if __name__ == '__main__':
     # plot.drawIntoMap(-57.603154, -25.284073, 1)
     # plot.printMap()
     # exit(0)
-    database_connection = db.DatabaseConnection()
-    diaAnalizarIni = datetime.strptime('2016-10-24 00:00:00', '%Y-%m-%d %H:%M:%S')
-    diaAnalizarFin = datetime.strptime('2016-10-24 23:59:59', '%Y-%m-%d %H:%M:%S')
+    database_connection = db.DatabaseConnection('190.128.205.75', 'rayos', 'cta', 'M9vNvgQ2=4os')
+    diaAnalizarIni = datetime.strptime('2016-11-27 13:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarFin = datetime.strptime('2016-11-27 17:00:00', '%Y-%m-%d %H:%M:%S')
 
     coordenadaAnalizar = '-57.606765,-25.284659'
     diametroAnalizar = '45000' #en metros
@@ -33,6 +33,7 @@ if __name__ == '__main__':
 
     tiempoAnalizarIni = diaAnalizarIni
     tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
+
 
     rows = database_connection.query(
         "SELECT start_time,end_time,type,latitude,longitude,peak_current,ic_height,number_of_sensors,ic_multiplicity,cg_multiplicity,geom FROM lightning_data WHERE type=1 AND ST_DistanceSphere(geom, ST_MakePoint(" + coordenadaAnalizar + ")) <= " + diametroAnalizar + "  AND start_time >= to_timestamp('" + str(diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND start_time <= to_timestamp('" + str(diaAnalizarFin) + "', 'YYYY-MM-DD HH24:MI:SS.MS')")

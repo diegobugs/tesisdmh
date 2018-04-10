@@ -277,6 +277,8 @@ class ML_SVM:
                               'Conclusion']).to_csv("analisis/" + fileName + ".csv", sep=";", mode='a', index=False,
                                                     header=False, quoting=csv.QUOTE_NONNUMERIC)
 
+        print("score "+str(self.clf.score(self.X, self.y)))
+
         # Si guardamos el modelo
         if self.saveModel == True:
             self.guardarModelo()
