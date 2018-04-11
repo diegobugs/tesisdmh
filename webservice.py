@@ -1,9 +1,10 @@
+import json
+
 from flask import Flask
 from flask import request
 from flask_cors import CORS
-import analisis_V5 as av5
 
-import json
+import final_v3 as v3
 
 app = Flask(__name__)
 CORS(app)
@@ -17,13 +18,16 @@ def test():
 def index():
     src = ""
     lugar = request.values['lugar']
-    finicio = request.values['finicio']
-    ffin = request.values['ffin']
-    hinicio = request.values['hinicio']
-    hfin = request.values['hfin']
+
+    finicio = request.values['finicio'] + " " + request.values['hinicio']
+    ffin = request.values['ffin'] + " " + request.values['hfin']
+    tiempoIntervalo = 10 # minutos
+    diametroAnalizar = '45000' # metros
 
 
-    return json.dumps({'success': True, 'tormenta': False, 'src': src}), 200, {
+    resp = v3.SVM(finicio,ffin,lugar)
+
+    return json.dumps({'success': True, 'tormenta': resp['tormenta'], 'src': resp['src'], 'tiempo':round(resp['tiempo'],0)}), 200, {
         'ContentType': 'application/json'}
 
 if __name__ == "__main__":

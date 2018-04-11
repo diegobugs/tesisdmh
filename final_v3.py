@@ -10,32 +10,33 @@ Obteniendo datos de medida de direccion de la celula
 
 """
 
-import pandas as pd
-from util import DatabaseConnection as db
-from util import PlotData as plt
-from util import MachineLearning as ML
-from datetime import datetime
-from datetime import timedelta
-from scipy.spatial import ConvexHull
-import numpy as np
-import time
 import csv
 import glob
-import moviepy.editor as mpy
 import os.path
+import time
+from datetime import datetime
+from datetime import timedelta
 
-# Configuraciones por defecto
-writeAnalisis = True  # Si queremos crear un .csv con conclusion y resumen del analisis
+import moviepy.editor as mpy
+import numpy as np
+import pandas as pd
+from scipy.spatial import ConvexHull
 
-if __name__ == '__main__':
+import MachineLearning as ML
+from util import DatabaseConnection as db
+from util import PlotData as plt
 
+import json
+
+
+def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
     SVM = ML.ML_SVM(False)
 
     inicio_de_tiempo = time.time()
     #  DATOS DE ANALISIS DE PRUEBA
-    diaAnalizarIni = datetime.strptime('2016-10-24 22:00:00', '%Y-%m-%d %H:%M:%S')
-    diaAnalizarFin = datetime.strptime('2016-10-25 01:00:00', '%Y-%m-%d %H:%M:%S')
-    coordenadaAnalizar = '-57.606765,-25.284659'  # Asuncion
+    diaAnalizarIni = datetime.strptime(diaAnalizarIni, '%Y-%m-%d %H:%M:%S')
+    diaAnalizarFin = datetime.strptime(diaAnalizarFin, '%Y-%m-%d %H:%M:%S')
+    # coordenadaAnalizar = '-57.606765,-25.284659'  # Asuncion
     # coordenadaAnalizar = '-55.873211,-27.336775' # Encarnacion - Playa San Jose
 
     tiempoIntervalo = 10  # minutos
@@ -64,24 +65,11 @@ if __name__ == '__main__':
                       columns=['start_time', 'end_time', 'type', 'latitude', 'longitude', 'peak_current', 'ic_height',
                                'number_of_sensors', 'ic_multiplicity', 'cg_multiplicity', 'geom'])
 
-    # # Conexion con base de datos de precipitaciones
-    # database_connection = db.DatabaseConnection('localhost', 'precip', 'postgres', '12345')
-    # print("Conectando a la base de datos...Precipitaciones")
-    # estaciones = "86218,86217,86214,86206,86207,86201,86222"
-    # rows = database_connection.query(
-    #     "SELECT codigo_estacion,nombre_estacion,latitud,longitud,fecha_observacion,valor_registrado,valor_corregido FROM precipitacion WHERE codigo_estacion IN (" + estaciones + ") AND fecha_observacion >= to_timestamp('" + str(
-    #         diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND fecha_observacion <= to_timestamp('" + str(
-    #         diaAnalizarFin) + "', 'YYYY-MM-DD HH24:MI:SS.MS')")
-    # print("Conectado")
-    #
-    # print("Preparando datos")
-    # dfP = pd.DataFrame(data=rows,
-    #                    columns=['codigo_estacion', 'nombre_estacion', 'latitud', 'longitud', 'fecha_observacion',
-    #                             'valor_registrado', 'valor_corregido'])
     print("Inicio de bucle")
 
     analisis_data, ArrayCentroides = [], []
     historialDescargas = [None] * 9
+    printPossibleWeather = False
     while tiempoAnalizarIni <= diaAnalizarFin:
 
         plot = plt.Plot()
@@ -114,7 +102,6 @@ if __name__ == '__main__':
             peak_current = round(peak_current, 1)
 
 
-            # @TODO registrar en un array las descargas 1h30m antes, es decir un array de 9 datos de descargas, el cual será consultado para generar la trayectoria
             if histLatLon:
                 for idx, item in enumerate(historialDescargas):
                     historialDescargas.insert(idx, histLatLon)
@@ -250,29 +237,16 @@ if __name__ == '__main__':
                 "En fecha hora " + str(tiempoAnalizarIni) + " se tuvo una intensidad de " + str(peak_current) + "A en " + str(densidad) + " descargas eléctricas en donde luego de 50m a 1h:10m la predicción es " + ("+=10mm probabilidad de Tormentas severas" if prediccion == 10 else "+=5mm probabilidad de Lluvias muy fuertes" if prediccion == 5 else "+=0 probabilidad baja o nula de lluvias"))
             analisis_data.append([tiempoAnalizarIni, peak_current, densidad, prediccion, txt])
 
+
+
         tiempoAnalizarIni = tiempoAnalizarFin
         tiempoAnalizarFin = tiempoAnalizarFin + timedelta(minutes=tiempoIntervalo)
     # plot.printMap()
 
     # SVM.guardarModelo()
 
-    # Si queremos guardar el análisis en un .csv
-    if writeAnalisis:
-        fileName = "Analisis_" + str(diaAnalizarIni).replace(":", "").replace(".", "") + "_" + str(
-            diaAnalizarFin).replace(":",
-                                    "").replace(
-            ".", "")
-
-        pd.DataFrame(data=analisis_data,
-                     columns=['Fecha_Hora', 'Intensidad', 'Densidad',
-                              'Clasificacion',
-                              'Conclusion']).to_csv("analisis/" + fileName + ".csv", sep=";", mode='a',
-                                                    index=False,
-                                                    header=False, quoting=csv.QUOTE_NONNUMERIC)
-
-
+    video_name = './png/tormenta'  ##nombre del archivo
     if os.path.exists('png/RECTA*.png'):
-        video_name = './png/tormenta'  ##nombre del archivo
         fps = 1
         file_list = glob.glob('./png/RECTA*.png')  # obtiene los png de la ruta actual
         # list.sort(file_list, key=lambda x: int(x.split('_')[1].split('.png')[0])) # Sort the images by #, this may need to be tweaked for your use case
@@ -282,7 +256,11 @@ if __name__ == '__main__':
     tiempo_final = time.time()
     tiempo_transcurrido = tiempo_final - inicio_de_tiempo
     print("Tiempo transcurrido de análisis: " + str(tiempo_transcurrido) + " segundos")
-    exit(0)
+
+
+    return {'tormenta': printPossibleWeather, 'src': video_name+".mp4", 'tiempo': tiempo_transcurrido}
+
+
 
     """"
     1. Recorrer por tipo de descarga

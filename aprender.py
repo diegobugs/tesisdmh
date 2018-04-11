@@ -1,4 +1,4 @@
-from util import MachineLearning as ML
+import MachineLearning as ML
 
 if __name__ == '__main__':
 
