@@ -35,10 +35,10 @@ if __name__ == '__main__':
 
     inicio_de_tiempo = time.time()
     #  DATOS DE ANALISIS DE PRUEBA
-    diaAnalizarIni = datetime.strptime('2016-10-24 22:00:00', '%Y-%m-%d %H:%M:%S')
-    diaAnalizarFin = datetime.strptime('2016-10-25 01:00:00', '%Y-%m-%d %H:%M:%S')
-    coordenadaAnalizar = '-57.606765,-25.284659'  # Asuncion
-    # coordenadaAnalizar = '-55.873211,-27.336775' # Encarnacion - Playa San Jose
+    diaAnalizarIni = datetime.strptime('2016-10-17 20:00:00', '%Y-%m-%d %H:%M:%S')
+    diaAnalizarFin = datetime.strptime('2016-10-18 04:00:00', '%Y-%m-%d %H:%M:%S')
+    # coordenadaAnalizar = '-57.606765,-25.284659'  # Asuncion
+    coordenadaAnalizar = '-55.873211,-27.336775' # Encarnacion - Playa San Jose
 
     tiempoIntervalo = 10  # minutos
     # DATOS DE ANALISIS EN TIEMPO REAL

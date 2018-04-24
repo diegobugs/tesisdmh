@@ -31,7 +31,7 @@ import json
 
 def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
     SVM = ML.ML_SVM(False)
-
+    tormentaDetectada = False
     inicio_de_tiempo = time.time()
     #  DATOS DE ANALISIS DE PRUEBA
     diaAnalizarIni = datetime.strptime(diaAnalizarIni, '%Y-%m-%d %H:%M:%S')
@@ -134,6 +134,7 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
 
                 if qtyCells <= 4:
                     print(str(tiempoAnalizarFin)+" tormenta en 1h "+str(tiempoAnalizarFin + timedelta(minutes=60)))
+                    tormentaDetectada = True
 
 
                 # if qtyCells >= 8:
@@ -258,7 +259,7 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
     print("Tiempo transcurrido de análisis: " + str(tiempo_transcurrido) + " segundos")
 
 
-    return {'tormenta': printPossibleWeather, 'src': video_name+".mp4", 'tiempo': tiempo_transcurrido}
+    return {'tormenta': tormentaDetectada, 'src': video_name+".mp4", 'tiempo': tiempo_transcurrido}
 
 
 

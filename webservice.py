@@ -1,5 +1,9 @@
 import json
 
+# pykryge
+# open lyer
+# open map
+
 from flask import Flask
 from flask import request
 from flask_cors import CORS
@@ -11,6 +15,7 @@ CORS(app)
 
 @app.route("/test", methods=['GET', 'POST'])
 def test():
+    print("test")
     return json.dumps({'success': True}), 200, {
         'ContentType': 'application/json'}
 
@@ -27,6 +32,7 @@ def index():
 
     resp = v3.SVM(finicio,ffin,lugar)
 
+    print("alerta es "+str(resp['tormenta']))
     return json.dumps({'success': True, 'tormenta': resp['tormenta'], 'src': resp['src'], 'tiempo':round(resp['tiempo'],0)}), 200, {
         'ContentType': 'application/json'}
 
