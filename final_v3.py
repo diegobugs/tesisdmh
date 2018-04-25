@@ -25,6 +25,7 @@ from scipy.spatial import ConvexHull
 import MachineLearning as ML
 from util import DatabaseConnection as db
 from util import PlotData as plt
+from util import PlotOnMap
 
 import json
 
@@ -143,14 +144,16 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
                     for idx, item in enumerate(historialDescargas):
                         fileName = str(tiempoAnalizarFin).replace(":", "").replace(".", "")
                         fileName = "CELULA_"+fileName+str(idx)
-                        plotCel = plt.Plot()
+                        # plotCel = plt.Plot()
+                        plotGeo = PlotOnMap.PlotOnGeoJSON()
                         points = []
 
 
 
                         if item is not None:
                             for k, r in enumerate(item):
-                                plotCel.drawIntoMap(r[1], r[0], 1)
+                                # plotCel.drawIntoMap(r[1], r[0], 1)
+                                # plotGeo.addFeature(r[1], r[0])
                                 points.append([r[1], r[0]])
 
                         # Si hay descargas eléctricas
@@ -162,7 +165,9 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
 
                             # Generamos un poligono que contenga todas las descargas electricas
                             hull = ConvexHull(points, qhull_options="QJ")
-                            plotCel.draw(points, hull)
+                            # plotCel.draw(points, hull)
+                            plotGeo.draw(points,hull)
+
 
                             # Obtenemos el centroide de nuestro poligono
                             cx = np.mean(hull.points[hull.vertices, 0])
@@ -179,11 +184,15 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
                             ArrayCentroides.append([cx, cy])
 
                             # Dibujamos los centroides en el mapa
-                            plotCel.drawIntoMap(cx, cy, 2)
+                            # plotCel.drawIntoMap(cx, cy, 2)
+                            plotGeo.addFeature(cx,cy)
+
 
                         # Imprimimos en una imagen cada una de las 9 celulas
                         if saveFile:
-                            plotCel.saveToFile(fileName)
+                            # plotCel.saveToFile(fileName)
+                            fc = plotGeo.getFeatureCollection()
+                            plotGeo.dumpGeoJson(fc, fileName+'.geojson')
 
             # Si tenemos un inicio y un fin de nuestra tormenta
             if EvoPuntoFinal and EvoPuntoInicial and ArrayCentroides:
@@ -207,8 +216,8 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
                 # Para dibujar la recta
                 fileName = str(tiempoAnalizarFin).replace(":", "").replace(".", "")
                 fileName = "RECTA_" + fileName
-                plotRecta = plt.Plot()
-                plotRecta.drawIntoMap(X, Y, 3)
+                # plotRecta = plt.Plot()
+                # plotRecta.drawIntoMap(X, Y, 3)
 
                 # Calculamos los coeficientes del ajuste (a X + b)
                 a, b = np.polyfit(X, Y, 1)
@@ -226,7 +235,7 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
                 # # plot.drawIntoMap(nuevo_x, nuevo_y, 4)
                 # fileName = "punto_futuro"
                 #
-                plot.saveToFile(fileName)
+                # plot.saveToFile(fileName)
                 # plot = plt.Plot()
                 #
                 # print("Se desplazó " + str(distancia) + "km en " + str(
@@ -247,12 +256,12 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
     # SVM.guardarModelo()
 
     video_name = './png/tormenta'  ##nombre del archivo
-    if os.path.exists('png/RECTA*.png'):
-        fps = 1
-        file_list = glob.glob('./png/RECTA*.png')  # obtiene los png de la ruta actual
-        # list.sort(file_list, key=lambda x: int(x.split('_')[1].split('.png')[0])) # Sort the images by #, this may need to be tweaked for your use case
-        clip = mpy.ImageSequenceClip(file_list, fps=fps)
-        clip.write_videofile('{}.mp4'.format(video_name), fps=fps)
+    # if os.path.exists('png/RECTA*.png'):
+    #     fps = 1
+    #     file_list = glob.glob('./png/RECTA*.png')  # obtiene los png de la ruta actual
+    #     # list.sort(file_list, key=lambda x: int(x.split('_')[1].split('.png')[0])) # Sort the images by #, this may need to be tweaked for your use case
+    #     clip = mpy.ImageSequenceClip(file_list, fps=fps)
+    #     clip.write_videofile('{}.mp4'.format(video_name), fps=fps)
 
     tiempo_final = time.time()
     tiempo_transcurrido = tiempo_final - inicio_de_tiempo

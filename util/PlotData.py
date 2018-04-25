@@ -97,6 +97,8 @@ class Plot:
         plt.savefig("png/"+fileName+"."+extension,dpi=300)
         plt.close()
 
+    def saveToGeoJSON(self):
+        plt.close()
 
     def printMap(self):
         # Get rid of some of the extraneous whitespace matplotlib loves to use.
