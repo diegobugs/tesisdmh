@@ -23,7 +23,7 @@ class PlotOnGeoJSON:
         self.geoRayos.append(geojson.Feature(geometry=geojson.Polygon([polyPoints])))
 
     def makePath(self, x, y):
-        self.geoRayos.append(geojson.Feature(geometry=geojson.LineString([(np.max(x) - 1, np.max(y) + 1),(np.min(x) - 1, np.min(y) + 1)])))
+        self.geoRayos.append(geojson.Feature(geometry=geojson.LineString([(np.min(x), np.min(y)),(np.max(x), np.max(y))])))
 
     def addFeature(self, x, y):
         self.geoRayos.append(geojson.Feature(geometry=geojson.Point((x, y))))
