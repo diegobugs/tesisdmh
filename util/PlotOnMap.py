@@ -18,12 +18,12 @@ class PlotOnGeoJSON:
         polyPoints = []
         for simplex in hull.vertices:
             x, y = points[simplex, 0], points[simplex, 1]
-            print(x)
-            print(y)
             polyPoints.append([x, y])
 
-
         self.geoRayos.append(geojson.Feature(geometry=geojson.Polygon([polyPoints])))
+
+    def makePath(self, x, y):
+        self.geoRayos.append(geojson.Feature(geometry=geojson.LineString([(np.max(x) - 1, np.max(y) + 1),(np.min(x) - 1, np.min(y) + 1)])))
 
     def addFeature(self, x, y):
         self.geoRayos.append(geojson.Feature(geometry=geojson.Point((x, y))))

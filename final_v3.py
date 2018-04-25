@@ -216,8 +216,10 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
                 # Para dibujar la recta
                 fileName = str(tiempoAnalizarFin).replace(":", "").replace(".", "")
                 fileName = "RECTA_" + fileName
-                # plotRecta = plt.Plot()
-                # plotRecta.drawIntoMap(X, Y, 3)
+                plotRecta = PlotOnMap.PlotOnGeoJSON()
+                plotRecta.makePath(X, Y)
+                fc = plotRecta.getFeatureCollection()
+                plotRecta.dumpGeoJson(fc, fileName + '.geojson')
 
                 # Calculamos los coeficientes del ajuste (a X + b)
                 a, b = np.polyfit(X, Y, 1)
