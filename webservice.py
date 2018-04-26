@@ -24,6 +24,8 @@ def index():
     src = ""
     lugar = request.values['lugar']
 
+    print(lugar)
+
     finicio = request.values['finicio'] + " " + request.values['hinicio']
     ffin = request.values['ffin'] + " " + request.values['hfin']
     tiempoIntervalo = 10 # minutos
@@ -37,7 +39,6 @@ def index():
     return json.dumps({
         'success': True,
         'tormenta': resp['tormenta'],
-        'src': resp['src'],
         'tiempo':round(resp['tiempo'],0),
         'rayos_geojson':resp['rayos.geojson'],
         'pol_geojson':resp['pol.geojson'],
