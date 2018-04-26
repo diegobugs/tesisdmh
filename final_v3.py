@@ -29,6 +29,11 @@ from util import PlotOnMap
 
 import json
 
+APP_KEY = 12345 # KEY de testeo
+RAYOS_GEOJSON = []
+POL_GEOJSON = []
+TRA_GEOJSON = []
+
 
 def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
     SVM = ML.ML_SVM(False)
@@ -92,10 +97,13 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
         histLatLon = []
         if not datosAnalisis.empty:
 
+            plotRayos = PlotOnMap.PlotOnGeoJSON()
+
             # Obtenemos las descargas eléctricas en el tiempo analizado
             for i, row in enumerate(datosAnalisis.itertuples(), 1):
                 peak_current += abs(row.peak_current)
                 histLatLon.append([row.latitude,row.longitude])
+                plotRayos.addFeature(row.longitude,row.latitude)
                 densidad += 1
 
             # poner los valores en base 100000, Ej: 1.000.000 = 10
@@ -143,7 +151,7 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
                     # Recorrer estado de tormentas 90 minutos antes
                     for idx, item in enumerate(historialDescargas):
                         fileName = str(tiempoAnalizarFin).replace(":", "").replace(".", "")
-                        fileName = "CELULA_"+fileName+str(idx)
+                        fileName = "CELULA_"+str(APP_KEY)+"_"+str(idx)
                         # plotCel = plt.Plot()
                         plotGeo = PlotOnMap.PlotOnGeoJSON()
                         points = []
@@ -185,14 +193,15 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
 
                             # Dibujamos los centroides en el mapa
                             # plotCel.drawIntoMap(cx, cy, 2)
-                            plotGeo.addFeature(cx,cy)
+                            # plotGeo.addFeature(cx,cy)
 
 
                         # Imprimimos en una imagen cada una de las 9 celulas
                         if saveFile:
                             # plotCel.saveToFile(fileName)
                             fc = plotGeo.getFeatureCollection()
-                            plotGeo.dumpGeoJson(fc, fileName+'.geojson')
+                            # plotGeo.dumpGeoJson(fc, fileName+'.geojson')
+                            POL_GEOJSON.append(plotGeo.dumpGeoJson(fc))
 
             # Si tenemos un inicio y un fin de nuestra tormenta
             if EvoPuntoFinal and EvoPuntoInicial and ArrayCentroides:
@@ -215,11 +224,12 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
 
                 # Para dibujar la recta
                 fileName = str(tiempoAnalizarFin).replace(":", "").replace(".", "")
-                fileName = "RECTA_" + fileName
+                fileName = "RECTA_" + str(APP_KEY) + "_" + fileName
                 plotRecta = PlotOnMap.PlotOnGeoJSON()
                 plotRecta.makePath(X, Y)
                 fc = plotRecta.getFeatureCollection()
-                plotRecta.dumpGeoJson(fc, fileName + '.geojson')
+                # plotRecta.dumpGeoJson(fc, fileName + '.geojson')
+                TRA_GEOJSON.append(plotRecta.dumpGeoJson(fc))
 
                 # Calculamos los coeficientes del ajuste (a X + b)
                 a, b = np.polyfit(X, Y, 1)
@@ -249,6 +259,12 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
                 "En fecha hora " + str(tiempoAnalizarIni) + " se tuvo una intensidad de " + str(peak_current) + "A en " + str(densidad) + " descargas eléctricas en donde luego de 50m a 1h:10m la predicción es " + ("+=10mm probabilidad de Tormentas severas" if prediccion == 10 else "+=5mm probabilidad de Lluvias muy fuertes" if prediccion == 5 else "+=0 probabilidad baja o nula de lluvias"))
             analisis_data.append([tiempoAnalizarIni, peak_current, densidad, prediccion, txt])
 
+            # fileName = str(tiempoAnalizarFin).replace(":", "").replace(".", "")
+            # fileName = "RAYOS_" + str(APP_KEY) + "_" + fileName
+            fc = plotRayos.getFeatureCollection()
+            # plotRayos.dumpGeoJson(fc, fileName + '.geojson')
+            RAYOS_GEOJSON.append(plotRayos.dumpGeoJson(fc))
+
 
 
         tiempoAnalizarIni = tiempoAnalizarFin
@@ -257,21 +273,19 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
 
     # SVM.guardarModelo()
 
-    video_name = './png/tormenta'  ##nombre del archivo
-    # if os.path.exists('png/RECTA*.png'):
-    #     fps = 1
-    #     file_list = glob.glob('./png/RECTA*.png')  # obtiene los png de la ruta actual
-    #     # list.sort(file_list, key=lambda x: int(x.split('_')[1].split('.png')[0])) # Sort the images by #, this may need to be tweaked for your use case
-    #     clip = mpy.ImageSequenceClip(file_list, fps=fps)
-    #     clip.write_videofile('{}.mp4'.format(video_name), fps=fps)
 
     tiempo_final = time.time()
     tiempo_transcurrido = tiempo_final - inicio_de_tiempo
     print("Tiempo transcurrido de análisis: " + str(tiempo_transcurrido) + " segundos")
 
 
-    return {'tormenta': tormentaDetectada, 'src': video_name+".mp4", 'tiempo': tiempo_transcurrido}
-
+    return {
+        'tormenta': tormentaDetectada,
+        'tiempo': tiempo_transcurrido,
+        'rayos.geojson': RAYOS_GEOJSON,
+        'pol.geojson': POL_GEOJSON,
+        'tra.geojson': TRA_GEOJSON
+    }
 
 
     """"

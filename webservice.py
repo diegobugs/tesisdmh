@@ -33,8 +33,18 @@ def index():
     resp = v3.SVM(finicio,ffin,lugar)
 
     print("alerta es "+str(resp['tormenta']))
-    return json.dumps({'success': True, 'tormenta': resp['tormenta'], 'src': resp['src'], 'tiempo':round(resp['tiempo'],0)}), 200, {
-        'ContentType': 'application/json'}
+
+    return json.dumps({
+        'success': True,
+        'tormenta': resp['tormenta'],
+        'src': resp['src'],
+        'tiempo':round(resp['tiempo'],0),
+        'rayos_geojson':resp['rayos.geojson'],
+        'pol_geojson':resp['pol.geojson'],
+        'tra_geojson':resp['tra.geojson']
+    }), 200, {
+        'ContentType': 'application/json'
+    }
 
 if __name__ == "__main__":
     app.run(debug=True)

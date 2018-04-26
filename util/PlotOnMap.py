@@ -1,6 +1,7 @@
 import geojson
 import time
 import numpy as np
+from numpy.linalg import lstsq
 
 # rayo = geojson.Feature(geometry=geojson.Point((-55.628954, -27.009561)))
 # otrorayo = geojson.Feature(geometry=geojson.Point((-55.530334, -27.000346)))
@@ -23,7 +24,7 @@ class PlotOnGeoJSON:
         self.geoRayos.append(geojson.Feature(geometry=geojson.Polygon([polyPoints])))
 
     def makePath(self, x, y):
-        self.geoRayos.append(geojson.Feature(geometry=geojson.LineString([(np.min(x), np.min(y)),(np.max(x), np.max(y))])))
+        self.geoRayos.append(geojson.Feature(geometry=geojson.LineString([(np.min(x),np.min(y)),(np.max(x),np.max(y))])))
 
     def addFeature(self, x, y):
         self.geoRayos.append(geojson.Feature(geometry=geojson.Point((x, y))))
@@ -34,5 +35,6 @@ class PlotOnGeoJSON:
 
     def dumpGeoJson(self, FeatureCollection, source='map.geojson'):
         dump = geojson.dumps(FeatureCollection)
-        with open(source, 'w') as file:
-            file.write(dump)
+        return dump
+        # with open(source, 'w') as file:
+        #     file.write(dump)
