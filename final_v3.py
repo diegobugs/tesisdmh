@@ -31,6 +31,8 @@ import json
 
 APP_KEY = 12345 # KEY de testeo
 RAYOS_GEOJSON = []
+COLLECTION_GEOJSON = []
+
 POL_GEOJSON = []
 TRA_GEOJSON = []
 
@@ -40,8 +42,8 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
     tormentaDetectada = False
     inicio_de_tiempo = time.time()
     #  DATOS DE ANALISIS DE PRUEBA
-    diaAnalizarIni = datetime.strptime(diaAnalizarIni, '%Y-%m-%d %H:%M:%S')
-    diaAnalizarFin = datetime.strptime(diaAnalizarFin, '%Y-%m-%d %H:%M:%S')
+    diaAnalizarIni = datetime.strptime(diaAnalizarIni, '%Y-%m-%d %H:%M')
+    diaAnalizarFin = datetime.strptime(diaAnalizarFin, '%Y-%m-%d %H:%M')
     # coordenadaAnalizar = '-57.606765,-25.284659'  # Asuncion
     # coordenadaAnalizar = '-55.873211,-27.336775' # Encarnacion - Playa San Jose
 
@@ -94,6 +96,8 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
         EvoPuntoFinal = []
         printPossibleWeather = False
 
+        print(str(tiempoAnalizarIni))
+
         histLatLon = []
         if not datosAnalisis.empty:
 
@@ -103,7 +107,7 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
             for i, row in enumerate(datosAnalisis.itertuples(), 1):
                 peak_current += abs(row.peak_current)
                 histLatLon.append([row.latitude,row.longitude])
-                plotRayos.addFeature(row.longitude,row.latitude)
+                plotRayos.addFeature(row.longitude,row.latitude,{'start_time': "'"+str(row.start_time)+"'",'end_time': "'"+str(row.end_time)+"'",'type':str(row.type),'peak_current':str(row.peak_current)})
                 densidad += 1
 
             # poner los valores en base 100000, Ej: 1.000.000 = 10
@@ -199,7 +203,10 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
                         # Imprimimos en una imagen cada una de las 9 celulas
                         if saveFile:
                             # plotCel.saveToFile(fileName)
-                            fc = plotGeo.getFeatureCollection()
+                            collCut = str(tiempoAnalizarFin).find(' ')
+                            collectionTitle = str(tiempoAnalizarFin)[collCut:]
+                            collectionTitle = 'Celula ' + collectionTitle
+                            fc = plotGeo.getFeatureCollection(collectionTitle)
                             # plotGeo.dumpGeoJson(fc, fileName+'.geojson')
                             POL_GEOJSON.append(plotGeo.dumpGeoJson(fc))
 
@@ -227,7 +234,8 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
                 fileName = "RECTA_" + str(APP_KEY) + "_" + fileName
                 plotRecta = PlotOnMap.PlotOnGeoJSON()
                 plotRecta.makePath(X, Y)
-                fc = plotRecta.getFeatureCollection()
+                collectionTitle = 'Posible trayectoria'
+                fc = plotRecta.getFeatureCollection(collectionTitle)
                 # plotRecta.dumpGeoJson(fc, fileName + '.geojson')
                 TRA_GEOJSON.append(plotRecta.dumpGeoJson(fc))
 
@@ -261,14 +269,17 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
 
             # fileName = str(tiempoAnalizarFin).replace(":", "").replace(".", "")
             # fileName = "RAYOS_" + str(APP_KEY) + "_" + fileName
-            fc = plotRayos.getFeatureCollection()
+            collCut = str(tiempoAnalizarFin).find(' ')
+            collectionTitle = str(tiempoAnalizarFin)[collCut:]
+            fc = plotRayos.getFeatureCollection(collectionTitle)
             # plotRayos.dumpGeoJson(fc, fileName + '.geojson')
             RAYOS_GEOJSON.append(plotRayos.dumpGeoJson(fc))
 
 
 
+
         tiempoAnalizarIni = tiempoAnalizarFin
-        tiempoAnalizarFin = tiempoAnalizarFin + timedelta(minutes=tiempoIntervalo)
+        tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
     # plot.printMap()
 
     # SVM.guardarModelo()

@@ -1,7 +1,38 @@
 import numpy as np
-from mpl_toolkits.basemap import Basemap
+# from mpl_toolkits.basemap import Basemap
+# import matplotlib.pyplot as plt
+# from sklearn.externals import joblib
+from sklearn import linear_model
 import matplotlib.pyplot as plt
-from sklearn.externals import joblib
+
+x=np.array([-55,-56,-56.5,-57,-55.5])
+y=np.array([-27,-27,-27.6,-26.5,-27.2])
+
+#
+# plt.plot(-55,-27)
+# plt.plot(-56,-27)
+# plt.plot(-56.5,-27.6)
+# plt.plot(-57,-26.5)
+# plt.plot(-55.5,-27.2)
+
+a, b = np.polyfit(x, y, 1)
+y = (a * x + b)
+
+# plt.plot(x,y)
+# plt.show()
+
+print([(np.min(x),np.min(y)),(np.max(x),np.max(y))])
+
+j = (np.array((x,y)).T)
+for i in j:
+    # print(np.asarray(i))
+    xx = i[0]
+    yy = i[1]
+    plt.plot(xx,yy)
+
+# plt.plot(j)
+plt.show()
+
 #
 # # Coordenadas de Encarnación
 # lllon = -56.533893
@@ -102,23 +133,23 @@ from sklearn.externals import joblib
 
 # clf = svm.SVC(kernel='rbf', C=0.5, cache_size=500) #,probability=True, class_weight='balanced')
 
-clf = joblib.load('modelo.sav')
-
-# clf.fit(X, y)
-
-
-# [[0,20], [0,2], [0,70],[0,100],[0,6]]
-Z = [0, 10]
-Z = np.reshape(Z, (1, -1))
-
-
-prediccion = clf.predict(Z)
-
-
-
-X = [[0,0], [0,1], [0,2],[0,3],[0,4],[0,5],[0,6], [0,7],[0,8], [0,9], [0,10],[0,11],[0,12],[0,13],[0,14],[0,15],[0,16],[0,17],[0,18],[0,19],[0,20],[0,21],[0,22],[0,22],[0,23],[0,24]]
-y = [0,0,0,0,0,5,5,5,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]
-
-print(clf.score(X,y))
-
-print(prediccion)
+# clf = joblib.load('modelo.sav')
+#
+# # clf.fit(X, y)
+#
+#
+# # [[0,20], [0,2], [0,70],[0,100],[0,6]]
+# Z = [0, 10]
+# Z = np.reshape(Z, (1, -1))
+#
+#
+# prediccion = clf.predict(Z)
+#
+#
+#
+# X = [[0,0], [0,1], [0,2],[0,3],[0,4],[0,5],[0,6], [0,7],[0,8], [0,9], [0,10],[0,11],[0,12],[0,13],[0,14],[0,15],[0,16],[0,17],[0,18],[0,19],[0,20],[0,21],[0,22],[0,22],[0,23],[0,24]]
+# y = [0,0,0,0,0,5,5,5,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10,10]
+#
+# print(clf.score(X,y))
+#
+# print(prediccion)
