@@ -30,7 +30,8 @@ from util import PlotOnMap
 import json
 
 APP_KEY = 12345 # KEY de testeo
-RAYOS_GEOJSON = []
+RAYOSIC_GEOJSON = []
+RAYOSCG_GEOJSON = []
 COLLECTION_GEOJSON = []
 
 POL_GEOJSON = []
@@ -63,7 +64,7 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
     # Conexion a la base de datos de descargas electricas
     database_connection = db.DatabaseConnection('190.128.205.75', 'rayos', 'cta', 'M9vNvgQ2=4os')
     rows = database_connection.query(
-        "SELECT start_time,end_time,type,latitude,longitude,peak_current,ic_height,number_of_sensors,ic_multiplicity,cg_multiplicity,geom FROM lightning_data WHERE type=1 AND ST_DistanceSphere(geom, ST_MakePoint(" + coordenadaAnalizar + ")) <= " + diametroAnalizar + "  AND start_time >= to_timestamp('" + str(
+        "SELECT start_time,end_time,type,latitude,longitude,peak_current,ic_height,number_of_sensors,ic_multiplicity,cg_multiplicity,geom FROM lightning_data WHERE ST_DistanceSphere(geom, ST_MakePoint(" + coordenadaAnalizar + ")) <= " + diametroAnalizar + "  AND start_time >= to_timestamp('" + str(
             diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND start_time <= to_timestamp('" + str(
             diaAnalizarFin) + "', 'YYYY-MM-DD HH24:MI:SS.MS')")
     print("Conectado")
@@ -96,18 +97,37 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
         EvoPuntoFinal = []
         printPossibleWeather = False
 
-        print(str(tiempoAnalizarIni))
-
         histLatLon = []
         if not datosAnalisis.empty:
 
-            plotRayos = PlotOnMap.PlotOnGeoJSON()
+            # Rayos Intra Cloud
+            plotRayosic = PlotOnMap.PlotOnGeoJSON()
+
+            # Rayos Cloud ground
+            plotRayoscg = PlotOnMap.PlotOnGeoJSON()
 
             # Obtenemos las descargas eléctricas en el tiempo analizado
             for i, row in enumerate(datosAnalisis.itertuples(), 1):
-                peak_current += abs(row.peak_current)
-                histLatLon.append([row.latitude,row.longitude])
-                plotRayos.addFeature(row.longitude,row.latitude,{'start_time': "'"+str(row.start_time)+"'",'end_time': "'"+str(row.end_time)+"'",'type':str(row.type),'peak_current':str(row.peak_current)})
+
+                # Para la predicción solo se tienen en cuenta descargas del tipo 1 (CG)
+                if row.type == 1:
+                    peak_current += abs(row.peak_current)
+                    histLatLon.append([row.latitude,row.longitude])
+
+                if row.type == 1:
+                    # Rayos CG
+                    plotRayoscg.addFeature(row.longitude, row.latitude, {'start_time': "'" + str(row.start_time) + "'",
+                                                                         'end_time': "'" + str(row.end_time) + "'",
+                                                                         'type': str(row.type),
+                                                                         'peak_current': str(row.peak_current)})
+
+                if row.type == 0:
+                    # Rayos IC
+                    plotRayosic.addFeature(row.longitude, row.latitude, {'start_time': "'" + str(row.start_time) + "'",
+                                                                         'end_time': "'" + str(row.end_time) + "'",
+                                                                         'type': str(row.type),
+                                                                         'peak_current': str(row.peak_current)})
+
                 densidad += 1
 
             # poner los valores en base 100000, Ej: 1.000.000 = 10
@@ -271,9 +291,9 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
             # fileName = "RAYOS_" + str(APP_KEY) + "_" + fileName
             collCut = str(tiempoAnalizarFin).find(' ')
             collectionTitle = str(tiempoAnalizarFin)[collCut:]
-            fc = plotRayos.getFeatureCollection(collectionTitle)
             # plotRayos.dumpGeoJson(fc, fileName + '.geojson')
-            RAYOS_GEOJSON.append(plotRayos.dumpGeoJson(fc))
+            RAYOSIC_GEOJSON.append(plotRayosic.dumpGeoJson(plotRayosic.getFeatureCollection(collectionTitle)))
+            RAYOSCG_GEOJSON.append(plotRayoscg.dumpGeoJson(plotRayoscg.getFeatureCollection(collectionTitle)))
 
 
 
@@ -293,7 +313,8 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
     return {
         'tormenta': tormentaDetectada,
         'tiempo': tiempo_transcurrido,
-        'rayos.geojson': RAYOS_GEOJSON,
+        'rayosic.geojson':RAYOSIC_GEOJSON,
+        'rayoscg.geojson':RAYOSCG_GEOJSON,
         'pol.geojson': POL_GEOJSON,
         'tra.geojson': TRA_GEOJSON
     }
