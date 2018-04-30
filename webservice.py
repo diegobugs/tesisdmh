@@ -8,7 +8,8 @@ from flask import Flask
 from flask import request
 from flask_cors import CORS
 
-import final_v3 as v3
+# import final_v3 as v3
+import final_v4 as v4
 
 app = Flask(__name__)
 CORS(app)
@@ -24,15 +25,14 @@ def index():
     src = ""
     lugar = request.values['lugar']
 
-    print(lugar)
-
     finicio = request.values['finicio'] + " " + request.values['hinicio']
     ffin = request.values['ffin'] + " " + request.values['hfin']
-    tiempoIntervalo = 10 # minutos
-    diametroAnalizar = '45000' # metros
 
+    svm4 = v4.SVM()
 
-    resp = v3.SVM(finicio,ffin,lugar)
+    resp = svm4.svm(finicio,ffin,lugar)
+
+    # resp = v3.SVM(finicio,ffin,lugar)
 
     # print("alerta es "+str(resp['tormenta']))
 
