@@ -43,7 +43,8 @@ def index():
         'rayosic_geojson': resp['rayosic.geojson'],
         'rayoscg_geojson': resp['rayoscg.geojson'],
         'pol_geojson':resp['pol.geojson'],
-        'tra_geojson':resp['tra.geojson']
+        'tra_geojson':resp['tra.geojson'],
+        'tiempo_alerta':resp['tiempo_alerta']
     }), 200, {
         'ContentType': 'application/json'
     }
