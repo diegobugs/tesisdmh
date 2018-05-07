@@ -53,15 +53,15 @@ class ML_SVM:
 
 
 
-    def obtenerPrediccion(self, densidad, intensidad, clasif=0):
+    def obtenerPrediccion(self, poligonos, intensidad, clasif=0):
 
         intensidad = intensidad # type: int
-        densidad = densidad # type: int
+        poligonos = poligonos # type: int
         clasif = clasif # type: int
 
         # Variables empleadas por el clasificador ML
-        # X datos de información [intensidad,densidad]
-        self.X.append([densidad, intensidad])
+        # X datos de información [intensidad,poligonos]
+        self.X.append([poligonos, intensidad])
         # y datos de aprendizaje [CANTIDAD DE LLUVIA LEIDA]
         self.y.append(clasif)
 
@@ -82,7 +82,7 @@ class ML_SVM:
             self.clf.fit(self.X, self.y)
 
         # Información leída para ser clasificada o predicha por ML
-        Z = [densidad, intensidad]  # densidad, intensidad
+        Z = [poligonos, intensidad]  # poligonos, intensidad
         # Establece una nueva estructura para el vector
         # Parametros VECTOR, NUEVA FORMA
         # El parametro -1 establece que no se sabe en cuantas columnas debe generar, por lo tanto Numpy se encarga del calculo
@@ -91,7 +91,7 @@ class ML_SVM:
         # Obtener una prediccion del clasificador
         prediccion = self.clf.predict(Z)
 
-        # print("Densidad:" +str(densidad)+" Intensidad:"+str(intensidad)+" Precipitacion:"+str(clasif)+" Predicción:"+str(prediccion))
+        # print("poligonos:" +str(poligonos)+" Intensidad:"+str(intensidad)+" Precipitacion:"+str(clasif)+" Predicción:"+str(prediccion))
 
         return prediccion
 
@@ -152,14 +152,14 @@ class ML_SVM:
             datosAnalisis = df.query(query)
 
             peak_current = 0  # Corriente pico INTENSIDAD
-            qty = 0  # Cantidad de rayos DENSIDAD
+            qty = 0  # Cantidad de rayos poligonos
 
             # Si el dataset de descargas no se encuentra vacío\
             histLatLon = []
             if not datosAnalisis.empty:
                 # Bucle de cada rayo
 
-                # Obtener INTENSIDAD Y DENSIDAD
+                # Obtener INTENSIDAD Y poligonos
                 for i, row in enumerate(datosAnalisis.itertuples(), 1):
                     histLatLon.append([row.latitude, row.longitude])
                     peak_current += abs(row.peak_current)
@@ -279,14 +279,14 @@ class ML_SVM:
             datosAnalisis = df.query(query)
 
             peak_current = 0  # Corriente pico INTENSIDAD
-            qty = 0  # Cantidad de rayos DENSIDAD
+            qty = 0  # Cantidad de rayos poligonos
 
             # Si el dataset de descargas no se encuentra vacío\
             histLatLon = []
             if not datosAnalisis.empty:
                 # Bucle de cada rayo
 
-                # Obtener INTENSIDAD Y DENSIDAD
+                # Obtener INTENSIDAD Y poligonos
                 for i, row in enumerate(datosAnalisis.itertuples(), 1):
                     histLatLon.append([row.latitude, row.longitude])
                     peak_current += abs(row.peak_current)
@@ -359,7 +359,7 @@ class ML_SVM:
 
                     analisis_data.append([tiempoAnalizarIni, peak_current, qty, precipitacion, prediccion, txt])
 
-                    print("Fecha/hora:"+str(tiempoAnalizarIni)+" Intensidad:"+str(peak_current)+" Densidad:"+str(qty)+" Precipitacion:"+str(precipitacion)+" Predicción:"+ ("Tormenta" if prediccion==10 else "Lluvia" if prediccion==5 else "Nada"))
+                    print("Fecha/hora:"+str(tiempoAnalizarIni)+" Intensidad:"+str(peak_current)+" poligonos:"+str(qty)+" Precipitacion:"+str(precipitacion)+" Predicción:"+ ("Tormenta" if prediccion==10 else "Lluvia" if prediccion==5 else "Nada"))
 
             peak_currentAux = peak_current
             # Nuevos tiempos a analizar
@@ -381,7 +381,7 @@ class ML_SVM:
         analisis_data.append(["Tiempo transcurrido de análisis: " + str(tiempo_transcurrido) + " segundos", '','','','',''])
 
         pd.DataFrame(data=analisis_data,
-                     columns=['Fecha_Hora', 'Intensidad', 'Densidad', 'Precipitacion_Real', 'Clasificacion',
+                     columns=['Fecha_Hora', 'Intensidad', 'poligonos', 'Precipitacion_Real', 'Clasificacion',
                               'Conclusion']).to_csv("analisis/" + fileName + ".csv", sep=";", mode='a', index=False,
                                                     header=False, quoting=csv.QUOTE_NONNUMERIC)
 
