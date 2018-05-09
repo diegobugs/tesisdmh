@@ -16,10 +16,10 @@ from sklearn.metrics import confusion_matrix
 # X = [[0, 0], [0, 5], [4, 5], [4, 10], [9, 10], [9,19],[3,11],[2,10],[1,10],[5,8],[3,8],[4,3],[3,13],[3,13],[1,12],[0,1],[5,9],[0,10],[4,16],[6,7],[5,5]]
 
 
-y = [0,0,0,0,0, 0, 0, 0, 0, 5, 5,5,5,5, 10,10,10,10,10,10,10,10,10,10,10,10]
-X = [[0,0],[0,1],[0,3], [9,19],[0,2], [4,3], [6,2], [0,4], [1,6], [6,12],[7,10],[8,13],[9,10], [4,10], [4,11],[4,12],[3,10],[2,10],[5,16],[4,20],[3,16],[4,10],[2,13],[4,18],[3,14],[4,17]]
-# X = []
-# y = []
+# y = [0,0,0,0,0,0, 0, 0, 0, 0, 5, 5,5,5,5, 10,10,10,10,10,10,10,10,10,10,10,10]
+# X = [[0,0],[0,1],[0,3],[0,0.2], [9,19],[0,2], [4,3], [6,2], [0,4], [1,6], [6,12],[7,10],[8,13],[9,10], [4,10], [4,11],[4,12],[3,10],[2,10],[5,16],[4,20],[3,16],[4,10],[2,13],[4,18],[3,14],[4,17]]
+X = []
+y = []
 
 with open('dataset\clf_data.csv', 'rt') as clf_data:
     spamreader = csv.reader(clf_data, delimiter=';')
@@ -52,7 +52,7 @@ class_names = np.array(['Nada', 'Lluvia', 'Tormenta'])
 # class_names = iris.target_names
 
 # Split the data into a training set and a test set
-X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_size=450)
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1, test_size=500)
 
 print(len(X_test))
 print(len(y_test))

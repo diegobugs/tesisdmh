@@ -66,20 +66,20 @@ if __name__ == '__main__':
                       columns=['start_time', 'end_time', 'type', 'latitude', 'longitude', 'peak_current', 'ic_height',
                                'number_of_sensors', 'ic_multiplicity', 'cg_multiplicity', 'geom'])
 
-    # # Conexion con base de datos de precipitaciones
-    # database_connection = db.DatabaseConnection('localhost', 'precip', 'postgres', '12345')
-    # print("Conectando a la base de datos...Precipitaciones")
-    # estaciones = "86218,86217,86214,86206,86207,86201,86222"
-    # rows = database_connection.query(
-    #     "SELECT codigo_estacion,nombre_estacion,latitud,longitud,fecha_observacion,valor_registrado,valor_corregido FROM precipitacion WHERE codigo_estacion IN (" + estaciones + ") AND fecha_observacion >= to_timestamp('" + str(
-    #         diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND fecha_observacion <= to_timestamp('" + str(
-    #         diaAnalizarFin) + "', 'YYYY-MM-DD HH24:MI:SS.MS')")
-    # print("Conectado")
-    #
-    # print("Preparando datos")
-    # dfP = pd.DataFrame(data=rows,
-    #                    columns=['codigo_estacion', 'nombre_estacion', 'latitud', 'longitud', 'fecha_observacion',
-    #                             'valor_registrado', 'valor_corregido'])
+    # Conexion con base de datos de precipitaciones
+    database_connection = db.DatabaseConnection('localhost', 'precip', 'postgres', '12345')
+    print("Conectando a la base de datos...Precipitaciones")
+    estaciones = "86218,86217,86214,86206,86207,86201,86222"
+    rows = database_connection.query(
+        "SELECT codigo_estacion,nombre_estacion,latitud,longitud,fecha_observacion,valor_registrado,valor_corregido FROM precipitacion WHERE codigo_estacion IN (" + estaciones + ") AND fecha_observacion >= to_timestamp('" + str(
+            diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND fecha_observacion <= to_timestamp('" + str(
+            diaAnalizarFin) + "', 'YYYY-MM-DD HH24:MI:SS.MS')")
+    print("Conectado")
+
+    print("Preparando datos")
+    dfP = pd.DataFrame(data=rows,
+                       columns=['codigo_estacion', 'nombre_estacion', 'latitud', 'longitud', 'fecha_observacion',
+                                'valor_registrado', 'valor_corregido'])
     print("Inicio de bucle")
 
     analisis_data, ArrayCentroides = [], []
@@ -130,7 +130,7 @@ if __name__ == '__main__':
             qtyCells = (sum(x is not None for x in historialDescargas))
 
             # Obtenemos la predicción generada por MachineLearning.py
-            prediccion = SVM.obtenerPrediccion(qtyCells, peak_current)
+            prediccion = SVM.obtenerPrediccion(qtyCells, peak_current, )
 
             printPossibleWeather = True if prediccion == 10 else False
 

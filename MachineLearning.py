@@ -21,8 +21,8 @@ class ML_SVM:
         self.saveModel = saveModel
 
         # Definicion por defecto de los .csv de conocimiento
-        y = [0, 5, 5, 10, 5]
-        X = [[0, 0], [0, 5], [4, 5], [4, 10], [9, 10]]
+        y = [0, 5, 5, 10, 5,0,0]
+        X = [[0, 0], [0, 5], [4, 5], [4, 10], [9, 10],[0,1.2],[9,2]]
         if not os.path.exists('dataset\clf_data.csv'):
             pd.DataFrame(data=X).to_csv('dataset\clf_data.csv', sep=";", mode='w', index=False, header=False)
         if not os.path.exists('dataset\clf_know.csv'):
@@ -338,10 +338,14 @@ class ML_SVM:
                 historialDescargas = [None] * 9
 
             if nuevaCelula or self.saveModel==False:
-                if (qty>0 or peak_current>0 or precipitacion > 0) and (precipitacion>0.6 or peak_current > 0):
+                qtyCells = (sum(x is not None for x in historialDescargas))
+                if (qtyCells>0 or peak_current>0 or precipitacion > 0) and (precipitacion>0.6 or peak_current > 0) and (precipitacion>0 and peak_current>0):
                 # if 1==1:
-                    a = 10 if (precipitacion > 10 and peak_current > 1 and qty <= 4) else 5 if (precipitacion > 5) else 0
-                    qtyCells = (sum(x is not None for x in historialDescargas))
+                    a = 10 if (precipitacion >= 10 and peak_current > 5 and qtyCells <= 4) else 5 if (precipitacion >= 5) else 0
+                    if a==0 and precipitacion>=10:
+                        a=10
+
+
                     prediccion = self.obtenerPrediccion(qtyCells,peak_current,a)
 
 
@@ -352,14 +356,14 @@ class ML_SVM:
                     txt = (
                         "En fecha hora " + str(tiempoAnalizarIni) + " se tuvo una intensidad de " + str(
                             peak_current) + "A en " + str(
-                            qty) + " descargas eléctricas en donde luego de 50m a 1:30h se registró una precipitacion de " + str(
+                            qtyCells) + " descargas eléctricas en donde luego de 50m a 1:30h se registró una precipitacion de " + str(
                             precipitacion) + "mm y la predicción para esta fecha es " + (
                             "+=10mm probabilidad de Tormentas severas" if prediccion == 10 else "+=5mm probabilidad de Lluvias muy fuertes" if prediccion == 5 else "+=0 probabilidad baja o nula de lluvias"))
 
 
-                    analisis_data.append([tiempoAnalizarIni, peak_current, qty, precipitacion, prediccion, txt])
+                    analisis_data.append([tiempoAnalizarIni, peak_current, qtyCells, precipitacion, prediccion, txt])
 
-                    print("Fecha/hora:"+str(tiempoAnalizarIni)+" Intensidad:"+str(peak_current)+" poligonos:"+str(qty)+" Precipitacion:"+str(precipitacion)+" Predicción:"+ ("Tormenta" if prediccion==10 else "Lluvia" if prediccion==5 else "Nada"))
+                    print("Fecha/hora:"+str(tiempoAnalizarIni)+" Intensidad:"+str(peak_current)+" poligonos:"+str(qtyCells)+" Precipitacion:"+str(precipitacion)+" Predicción:"+ ("Tormenta" if prediccion==10 else "Lluvia" if prediccion==5 else "Nada"))
 
             peak_currentAux = peak_current
             # Nuevos tiempos a analizar
