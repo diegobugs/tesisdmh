@@ -5,8 +5,8 @@ if __name__ == '__main__':
     SVM = ML.ML_SVM(True)
 
     # Parametros para buscar descargas
-    diaAnalizarIni = '2016-02-01 00:00:00'
-    diaAnalizarFin = '2016-03-01 00:00:00'
+    diaAnalizarIni = '2016-03-01 00:00:00'
+    diaAnalizarFin = '2016-04-01 00:00:00'
     # coordenadaAnalizar = '-57.606765,-25.284659'  # Asuncion2
     coordenadaAnalizar = '-57.58762493212727,-25.362657878768985'  # Asuncion2
     # coordenadaAnalizar = '-54.842809,-25.459519' # Ciudad del Este Aeropuerto Guarani

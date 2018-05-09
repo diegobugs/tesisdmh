@@ -52,7 +52,7 @@ class_names = np.array(['Nada', 'Lluvia', 'Tormenta'])
 # class_names = iris.target_names
 
 # Split the data into a training set and a test set
-X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1, test_size=500)
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1, test_size=0.4)
 
 print(len(X_test))
 print(len(y_test))
