@@ -21,11 +21,11 @@ from sklearn.metrics import confusion_matrix
 X = []
 y = []
 
-with open('dataset\clf_data.csv', 'rt') as clf_data:
+with open('dataset\\test_data.csv', 'rt') as clf_data:
     spamreader = csv.reader(clf_data, delimiter=';')
     for row in spamreader:
         X.append([float(row[0]), float(row[1])])
-with open('dataset\clf_know.csv', 'rt') as clf_know:
+with open('dataset\\test_know.csv', 'rt') as clf_know:
     spamreader = csv.reader(clf_know, delimiter=';')
     for row in spamreader:
         y.append(float(row[0]))
@@ -43,7 +43,7 @@ X = (np.delete(matrix, np.s_[2], axis=1)).tolist()
 y = ((np.delete(matrix, np.s_[0:2], axis=1)).ravel()).tolist()
 y = y[0]
 
-# print(X)
+print(X)
 # print(y)
 class_names = np.array(['Nada', 'Lluvia', 'Tormenta'])
 # iris = datasets.load_iris()
@@ -52,10 +52,14 @@ class_names = np.array(['Nada', 'Lluvia', 'Tormenta'])
 # class_names = iris.target_names
 
 # Split the data into a training set and a test set
-X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=1, test_size=0.4)
+# X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_size=100)
 
-print(len(X_test))
-print(len(y_test))
+# print(X_test)
+# print(len(X_test))
+# print(len(y_test))
+
+X_test = X
+y_test = y
 
 # Run classifier, using a model that is too regularized (C too low) to see
 # the impact on the results

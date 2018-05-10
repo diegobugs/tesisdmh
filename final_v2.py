@@ -129,6 +129,21 @@ if __name__ == '__main__':
 
             qtyCells = (sum(x is not None for x in historialDescargas))
 
+            # Consulta de precipitaciones
+            query = 'fecha_observacion >="' + datetime.strftime(tiempoAnalizarIni + timedelta(minutes=0),
+                                                                '%Y-%m-%d %H:%M:%S') + '" and fecha_observacion < "' + datetime.strftime(
+                tiempoAnalizarIni + timedelta(minutes=10), '%Y-%m-%d %H:%M:%S') + '"'
+            datosAnalisis = dfP.query(query)
+            precipitacion = 0
+            qtyE = 0  # Cantidad de estaciones usadas
+            if not datosAnalisis.empty:
+                # Bucle de cada precipitacion
+                for i, row in enumerate(datosAnalisis.itertuples(), 1):
+                    qtyE += 1
+                    if precipitacion < row.valor_registrado:
+                        precipitacion = row.valor_registrado
+
+
             # Obtenemos la predicción generada por MachineLearning.py
             prediccion = SVM.obtenerPrediccion(qtyCells, peak_current, )
 
