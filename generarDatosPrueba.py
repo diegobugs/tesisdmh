@@ -64,16 +64,16 @@ class ML_SVM:
         pd.DataFrame(data=self.X).to_csv('dataset\\test_data.csv', sep=";", mode='w', index=False, header=False)
         pd.DataFrame(data=self.y).to_csv('dataset\\test_know.csv', sep=";", mode='w', index=False, header=False)
 
-    def svm(self, diaAnalizarFin, coordenadaAnalizar, tiempoIntervalo = 10, diametroAnalizar = '45000'):
-        # self.diaAnalizarIni = diaAnalizarIni  # type: str
+    def svm(self, diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar, tiempoIntervalo = 10, diametroAnalizar = '45000'):
+        self.diaAnalizarIni = diaAnalizarIni  # type: str
         self.diaAnalizarFin = diaAnalizarFin  # type: str
         self.coordenadaAnalizar = coordenadaAnalizar  # type: str (LAT,LON)
         self.tiempoIntervalo = tiempoIntervalo  # type: int minutos
         self.diametroAnalizar = diametroAnalizar  # type: str metros
 
-
         diaAnalizarFin = datetime.strptime(diaAnalizarFin, '%Y-%m-%d %H:%M:%S')
-        diaAnalizarIni = diaAnalizarFin - timedelta(minutes=90)
+        diaAnalizarIni = datetime.strptime(diaAnalizarIni, '%Y-%m-%d %H:%M:%S')
+        # diaAnalizarIni = diaAnalizarFin - timedelta(minutes=90)
 
         # Establecer un tiempo de inicio del calculo para saber cuanto demora
         inicio_de_tiempo = time.time()
@@ -103,10 +103,10 @@ class ML_SVM:
                                    'number_of_sensors', 'ic_multiplicity', 'cg_multiplicity', 'geom'])
 
         # Conexion con base de datos de precipitaciones
-        database_connection = db.DatabaseConnection('precip', 'precip', 'postgres', '12345')
+        database_connection = db.DatabaseConnection('localhost', 'precip', 'postgres', '12345')
         print("Conectando a la base de datos...Precipitaciones")
-        # estaciones = "86218,86217,86214,86206,86207,86201" # Asuncion
-        estaciones = "86246,86248" #Ciudad del este
+        estaciones = "86218,86217,86214,86206,86207,86201" # Asuncion
+        # estaciones = "86246,86248" #Ciudad del este
         rows = database_connection.query(
             "SELECT codigo_estacion,nombre_estacion,latitud,longitud,fecha_observacion,valor_registrado,valor_corregido FROM precipitacion WHERE codigo_estacion IN (" + estaciones + ") AND fecha_observacion >= to_timestamp('" + str(
                 diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND fecha_observacion <= to_timestamp('" + str(
@@ -202,7 +202,7 @@ class ML_SVM:
 
                     prediccion = self.agregarDatos(qtyCells, peak_current, a)
 
-                    if prediccion == 10:
+                    if a == 10:
                         nuevaCelula = False
 
                     # Texto generado para mostrar, dando una conclusion de la lectura
@@ -222,4 +222,4 @@ class ML_SVM:
             tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
         # endwhile recorrido de tiempo de analisis
 
-        return a
+        self.guardarDatos()

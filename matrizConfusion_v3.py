@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 import csv
 from sklearn.externals import joblib
 import matplotlib.patches as mpatches
+from sklearn import tree
 
 from sklearn import svm, datasets
 from sklearn.model_selection import train_test_split
@@ -22,11 +23,11 @@ from sklearn.metrics import confusion_matrix
 X = []
 y = []
 
-with open('dataset\\test_data.csv', 'rt') as clf_data:
+with open('dataset\\clf_data.csv', 'rt') as clf_data:
     spamreader = csv.reader(clf_data, delimiter=';')
     for row in spamreader:
         X.append([float(row[0]), float(row[1])])
-with open('dataset\\test_know.csv', 'rt') as clf_know:
+with open('dataset\\clf_know.csv', 'rt') as clf_know:
     spamreader = csv.reader(clf_know, delimiter=';')
     for row in spamreader:
         y.append(float(row[0]))
@@ -65,13 +66,18 @@ X_test = X
 y_test = y
 
 # Split the data into a training set and a test set
-# X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_size=0.2)
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_size=0.2)
 
 # Run classifier, using a model that is too regularized (C too low) to see
 # the impact on the results
-# classifier = svm.SVC(kernel='rbf', C=1, cache_size=8000, probability=True, class_weight='balanced')
-classifier = joblib.load('modelo.sav')
-# y_pred = classifier.fit(X_train, y_train).predict(X_test)
+# classifier = svm.SVC(kernel='linear', C=1, cache_size=8000, probability=True, class_weight='balanced')
+classifier = tree.DecisionTreeClassifier()
+
+# classifier = joblib.load('modelo.sav')
+
+classifier.fit(X_train, y_train)
+# classifier.fit(X_train, y_train)
+
 y_pred = classifier.predict(X_test)
 
 

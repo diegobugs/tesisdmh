@@ -41,7 +41,7 @@ class ML_SVM:
         # Definir el aprendizaje
         if self.saveModel == True:
             # Inicializar el clasificador
-            self.clf = svm.SVC(kernel='rbf', C=1, cache_size=8000, probability=True, class_weight='balanced')
+            self.clf = svm.SVC(kernel='linear', C=1, cache_size=8000, probability=True, class_weight='balanced')
         else:
             # Verificar que exista el modelo
             if os.path.exists('modelo.sav'):
@@ -49,7 +49,7 @@ class ML_SVM:
             else:
                 print("ALERTA: No existe el modelo. Se generará un nuevo modelo.")
                 self.saveModel = True
-                self.clf = svm.SVC(kernel='rbf', C=1, cache_size=8000, probability=True, class_weight='balanced')
+                self.clf = svm.SVC(kernel='linear', C=1, cache_size=8000, probability=True, class_weight='balanced')
 
 
 
@@ -101,6 +101,114 @@ class ML_SVM:
         # Se guarda en un .csv la información utilizada para generar el modelo, cada vez que se lea de nuevo, se debe usar esta información como conocimiento
         pd.DataFrame(data=self.X).to_csv('dataset\clf_data.csv', sep=";", mode='w', index=False, header=False)
         pd.DataFrame(data=self.y).to_csv('dataset\clf_know.csv', sep=";", mode='w', index=False, header=False)
+
+    def ds(self, diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar, tiempoIntervalo = 10, diametroAnalizar = '45000'):
+        self.diaAnalizarIni = diaAnalizarIni  # type: str
+        self.diaAnalizarFin = diaAnalizarFin  # type: str
+        self.coordenadaAnalizar = coordenadaAnalizar  # type: str (LAT,LON)
+        self.tiempoIntervalo = tiempoIntervalo  # type: int minutos
+        self.diametroAnalizar = diametroAnalizar  # type: str metros
+
+        diaAnalizarIni = datetime.strptime(diaAnalizarIni, '%Y-%m-%d %H:%M:%S')
+        diaAnalizarFin = datetime.strptime(diaAnalizarFin, '%Y-%m-%d %H:%M:%S')
+
+        # Establecer un tiempo de inicio del calculo para saber cuanto demora
+        inicio_de_tiempo = time.time()
+        print("Analisis iniciado: " + str(datetime.now()))
+
+        # Conexion a la base de datos de descargas electricas
+        database_connection = db.DatabaseConnection('190.128.205.75', 'rayos', 'cta', 'M9vNvgQ2=4os')
+
+        # Definicion de tiempos a ser analizados, estas variables iran iterando en un bucle segun el tiempoIntervalo
+        tiempoAnalizarIni = diaAnalizarIni
+        tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
+
+        print("Conectando a la base de datos...Descargas")
+
+        print(coordenadaAnalizar)
+
+        rows = database_connection.query(
+            "SELECT start_time,end_time,type,latitude,longitude,peak_current,ic_height,number_of_sensors,ic_multiplicity,cg_multiplicity,geom FROM lightning_data WHERE type=1 AND ST_DistanceSphere(geom, ST_MakePoint(" + coordenadaAnalizar + ")) <= " + diametroAnalizar + "  AND start_time >= to_timestamp('" + str(
+                diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND start_time <= to_timestamp('" + str(
+                diaAnalizarFin) + "', 'YYYY-MM-DD HH24:MI:SS.MS')")
+        print("Conectado")
+
+        print("Preparando datos")
+        df = pd.DataFrame(data=rows,
+                          columns=['start_time', 'end_time', 'type', 'latitude', 'longitude', 'peak_current',
+                                   'ic_height',
+                                   'number_of_sensors', 'ic_multiplicity', 'cg_multiplicity', 'geom'])
+
+        print("Inicio de bucle")
+
+        analisis_data = []
+        peak_currentAux = 0
+        nuevaCelula = True
+        historialDescargas = [None] * 9
+        while tiempoAnalizarIni <= diaAnalizarFin:
+            query = 'start_time >="' + datetime.strftime(tiempoAnalizarIni,
+                                                         '%Y-%m-%d %H:%M:%S') + '" and start_time<="' + datetime.strftime(
+                tiempoAnalizarFin, '%Y-%m-%d %H:%M:%S') + '"'
+            datosAnalisis = df.query(query)
+
+            peak_current = 0  # Corriente pico INTENSIDAD
+            qty = 0  # Cantidad de rayos poligonos
+
+            # Si el dataset de descargas no se encuentra vacío\
+            histLatLon = []
+            if not datosAnalisis.empty:
+                # Bucle de cada rayo
+
+                # Obtener INTENSIDAD Y poligonos
+                for i, row in enumerate(datosAnalisis.itertuples(), 1):
+                    histLatLon.append([row.latitude, row.longitude])
+                    peak_current += abs(row.peak_current)
+                    qty += 1
+                    # endfor
+            # endif hay datos de descargas
+
+            # poner los valores en base 100000, Ej: 1.000.000 = 10
+            peak_current = peak_current / 100000
+            peak_current = round(peak_current, 1)
+            # peak_current = math.ceil(peak_current / 10000) * 10000
+
+            if histLatLon:
+                for idx, item in enumerate(historialDescargas):
+                    historialDescargas.insert(idx, histLatLon)
+                    historialDescargas.pop()
+                    break
+
+            # Una vez dada la predicción de 10 = tormenta
+            # Esperar a que peak_current sea menor o igual a 50000 es decir, que sea otra ceula de tormenta, no la misma
+            # Ya que la misma celula puede mostrar una intensidad de 2M , 3M, 4M de amperios pero ya no indicar que luego de 1h lloverá +=10mm
+            if peak_current <= 0.5:
+                nuevaCelula = True
+                historialDescargas = [None] * 9
+
+            if nuevaCelula:
+                if (qty > 0 or peak_current > 0) and (peak_current > 0):
+                    qtyCells = (sum(x is not None for x in historialDescargas))
+                    prediccion = self.obtenerPrediccion(qtyCells, peak_current, 0)
+
+                    if prediccion == 10:
+                        nuevaCelula = False
+
+            peak_currentAux = peak_current
+            # Nuevos tiempos a analizar
+            tiempoAnalizarIni = tiempoAnalizarFin
+            # Sumamos el tiempoIntervalo para continuar con el bucle
+            tiempoAnalizarFin = tiempoAnalizarIni + timedelta(minutes=tiempoIntervalo)
+        # endwhile recorrido de tiempo de analisis
+
+
+        # Asignamos un tiempo de finalizacion del analisis para saber cuanto demoro
+        tiempo_final = time.time()
+        tiempo_transcurrido = tiempo_final - inicio_de_tiempo
+
+        print("score " + str(self.clf.score(self.X, self.y)))
+
+        print("Tiempo transcurrido de análisis: " + str(tiempo_transcurrido) + " segundos")
+
 
     def svm(self, diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar, tiempoIntervalo = 10, diametroAnalizar = '45000'):
         self.diaAnalizarIni = diaAnalizarIni  # type: str
@@ -252,7 +360,7 @@ class ML_SVM:
 
         if self.saveModel == True:
             # Conexion con base de datos de precipitaciones
-            database_connection = db.DatabaseConnection('precip', 'precip', 'postgres', '12345')
+            database_connection = db.DatabaseConnection('localhost', 'precip', 'postgres', '12345')
             print("Conectando a la base de datos...Precipitaciones")
             estaciones = "86218,86217,86214,86206,86207,86201"
             # estaciones = "86246,86248"
@@ -341,10 +449,13 @@ class ML_SVM:
                 qtyCells = (sum(x is not None for x in historialDescargas))
                 if (qtyCells>0 or peak_current>0 or precipitacion > 0) and (precipitacion>0.6 or peak_current > 0) and (precipitacion>0 and peak_current>0):
                 # if 1==1:
-                    a = 10 if (precipitacion >= 10 and peak_current > 5 and qtyCells <= 4) else 5 if (precipitacion >= 5) else 0
-                    if a==0 and precipitacion>=10:
-                        a=10
+                #     a = 10 if (precipitacion >= 10 and peak_current > 5 and qtyCells <= 4) else 5 if (precipitacion >= 5) else 0
+                    # if a==0 and precipitacion>=10:
+                    #     a=10
 
+                    a = 10 if (precipitacion >= 10 and peak_current > 0.1) else 5 if (precipitacion >= 5) else 0
+                    if peak_current == 0:
+                        a = 0
 
                     prediccion = self.obtenerPrediccion(qtyCells,peak_current,a)
 
