@@ -360,7 +360,7 @@ class ML_SVM:
 
         if self.saveModel == True:
             # Conexion con base de datos de precipitaciones
-            database_connection = db.DatabaseConnection('localhost', 'precip', 'postgres', '12345')
+            database_connection = db.DatabaseConnection('precip', 'precip', 'postgres', '12345')
             print("Conectando a la base de datos...Precipitaciones")
             estaciones = "86218,86217,86214,86206,86207,86201"
             # estaciones = "86246,86248"
@@ -441,7 +441,7 @@ class ML_SVM:
             # Una vez dada la predicción de 10 = tormenta
             # Esperar a que peak_current sea menor o igual a 50000 es decir, que sea otra ceula de tormenta, no la misma
             # Ya que la misma celula puede mostrar una intensidad de 2M , 3M, 4M de amperios pero ya no indicar que luego de 1h lloverá +=10mm
-            if self.saveModel and peak_current <= 0.5:
+            if self.saveModel and peak_current <= 1:
                 nuevaCelula = True
                 historialDescargas = [None] * 9
 
@@ -449,11 +449,11 @@ class ML_SVM:
                 qtyCells = (sum(x is not None for x in historialDescargas))
                 if (qtyCells>0 or peak_current>0 or precipitacion > 0) and (precipitacion>0.6 or peak_current > 0) and (precipitacion>0 and peak_current>0):
                 # if 1==1:
-                #     a = 10 if (precipitacion >= 10 and peak_current > 5 and qtyCells <= 4) else 5 if (precipitacion >= 5) else 0
+                    a = 10 if (precipitacion >= 10 and peak_current > 8 and qtyCells <= 4) else 5 if (precipitacion >= 5) else 0
                     # if a==0 and precipitacion>=10:
                     #     a=10
 
-                    a = 10 if (precipitacion >= 10 and peak_current > 0.1) else 5 if (precipitacion >= 5) else 0
+                    # a = 10 if (precipitacion >= 10 and peak_current > 0.1) else 5 if (precipitacion >= 5) else 0
                     if peak_current == 0:
                         a = 0
 
