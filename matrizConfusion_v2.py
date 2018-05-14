@@ -71,8 +71,9 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_s
 # the impact on the results
 classifier = svm.SVC(kernel='linear', C=1, cache_size=8000, probability=True, class_weight='balanced')
 # classifier = joblib.load('modelo.sav')
-y_pred = classifier.fit(X_train, y_train).predict(X_test)
-# y_pred = classifier.predict(X_test)
+
+classifier.fit(X_train, y_train)
+y_pred = classifier.predict(X_test)
 
 
 
