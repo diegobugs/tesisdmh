@@ -41,7 +41,7 @@ class ML_SVM:
         # Definir el aprendizaje
         if self.saveModel == True:
             # Inicializar el clasificador
-            self.clf = svm.SVC(kernel='linear', C=1, cache_size=8000, probability=True, class_weight='balanced')
+            self.clf = svm.SVC(kernel='rbf', C=0.5, cache_size=8000, probability=True, class_weight='balanced')
         else:
             # Verificar que exista el modelo
             if os.path.exists('modelo.sav'):
@@ -49,7 +49,7 @@ class ML_SVM:
             else:
                 print("ALERTA: No existe el modelo. Se generará un nuevo modelo.")
                 self.saveModel = True
-                self.clf = svm.SVC(kernel='linear', C=1, cache_size=8000, probability=True, class_weight='balanced')
+                self.clf = svm.SVC(kernel='rbf', C=0.5, cache_size=8000, probability=True, class_weight='balanced')
 
 
 
@@ -447,9 +447,9 @@ class ML_SVM:
 
             if nuevaCelula or self.saveModel==False:
                 qtyCells = (sum(x is not None for x in historialDescargas))
-                if (qtyCells>0 or peak_current>0 or precipitacion > 0) and (precipitacion>0.6 or peak_current > 0) and (precipitacion>0 and peak_current>0):
+                if (qtyCells>0 or peak_current>0 or precipitacion > 0) and (precipitacion>0 and peak_current>0):
                 # if 1==1:
-                    a = 10 if (precipitacion >= 10 and peak_current > 8 and qtyCells <= 4) else 5 if (precipitacion >= 5) else 0
+                    a = 10 if (precipitacion >= 10 and peak_current >= 8 and qtyCells <= 5) else 5 if (precipitacion >= 5 and peak_current>0) else 0
                     # if a==0 and precipitacion>=10:
                     #     a=10
 

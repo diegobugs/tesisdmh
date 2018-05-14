@@ -11,7 +11,10 @@ import matplotlib.patches as mpatches
 from sklearn import svm, datasets
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix
+import time
 
+
+inicio_de_tiempo = time.time()
 # import some data to play with
 # y = [0, 5, 5, 10, 5, 0,10,10,10,5,5,0,10,10,10,0,5,10,10,0,5]
 # X = [[0, 0], [0, 5], [4, 5], [4, 10], [9, 10], [9,19],[3,11],[2,10],[1,10],[5,8],[3,8],[4,3],[3,13],[3,13],[1,12],[0,1],[5,9],[0,10],[4,16],[6,7],[5,5]]
@@ -55,7 +58,7 @@ plt.xlabel("Poligonos")
 plt.ylabel("Intensidad en base A/100.000")
 plt.legend(handles=[tormenta_patch, lluvia_patch, nada_patch])
 
-plt.show()
+# plt.show()
 
 # print(y)
 class_names = np.array(['Ninguna', 'Lluvia', 'Tormenta'])
@@ -65,13 +68,12 @@ X_test = X
 y_test = y
 
 # Split the data into a training set and a test set
-X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_size=0.2)
+X_train, X_test, y_train, y_test = train_test_split(X, y, random_state=0, test_size=0.25)
 
 # Run classifier, using a model that is too regularized (C too low) to see
 # the impact on the results
-classifier = svm.SVC(kernel='linear', C=1, cache_size=8000, probability=True, class_weight='balanced')
+classifier = svm.SVC(kernel='rbf', C=0.5, cache_size=8000, probability=True, class_weight='balanced')
 # classifier = joblib.load('modelo.sav')
-
 classifier.fit(X_train, y_train)
 y_pred = classifier.predict(X_test)
 
@@ -125,4 +127,9 @@ plt.figure()
 plot_confusion_matrix(cnf_matrix, classes=class_names, normalize=True,
                       title='Matriz de confusión normalizada')
 
+# Asignamos un tiempo de finalizacion del analisis para saber cuanto demoro
+tiempo_final = time.time()
+tiempo_transcurrido = tiempo_final - inicio_de_tiempo
+
+print("Tiempo transcurrido " + str(tiempo_transcurrido) + " segundos.")
 plt.show()
