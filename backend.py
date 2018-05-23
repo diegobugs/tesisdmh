@@ -33,7 +33,7 @@ class SVM:
             # diaAnalizarIni = datetime.now() - timedelta(minutes=10)
             # diaAnalizarFin = datetime.now()
 
-            diaAnalizarIni = datetime.now() - timedelta(minutes=10)
+            diaAnalizarIni = datetime.now() - timedelta(minutes=60)
             diaAnalizarIni = datetime.strptime(str(diaAnalizarIni), '%Y-%m-%d %H:%M:%S.%f')
             diaAnalizarFin = datetime.now()
             diaAnalizarFin = datetime.strptime(str(diaAnalizarFin), '%Y-%m-%d %H:%M:%S.%f')
