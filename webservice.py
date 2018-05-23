@@ -37,7 +37,7 @@ class Prediccion(Resource):
         return json.dumps({
             'success': True,
             'tormenta': resp['tormenta'],
-            'tiempo': round(resp['tiempo'],0),
+            'tiempo': round(resp['tiempo'],4),
             'rayosic_geojson': resp['rayosic.geojson'],
             'rayoscg_geojson': resp['rayoscg.geojson'],
             'pol_geojson':resp['pol.geojson'],
