@@ -25,20 +25,31 @@ class SVM:
         self.tiempo_alerta = ''
         self.tiempo_transcurrido = 0
 
-    def svm(self, diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
+    def svm(self, coordenadaAnalizar, diaAnalizarIni=None, diaAnalizarFin=None):
         SVM = ML.ML_SVM(False)
         inicio_de_tiempo = time.time()
-        #  DATOS DE ANALISIS DE PRUEBA
-        diaAnalizarIni = datetime.strptime(diaAnalizarIni, '%Y-%m-%d %H:%M')
-        diaAnalizarFin = datetime.strptime(diaAnalizarFin, '%Y-%m-%d %H:%M')
+        if diaAnalizarIni == None:
+            # DATOS DE ANALISIS EN TIEMPO REAL
+            # diaAnalizarIni = datetime.now() - timedelta(minutes=10)
+            # diaAnalizarFin = datetime.now()
+
+            diaAnalizarIni = datetime.now() - timedelta(minutes=10)
+            diaAnalizarIni = datetime.strptime(str(diaAnalizarIni), '%Y-%m-%d %H:%M:%S.%f')
+            diaAnalizarFin = datetime.now()
+            diaAnalizarFin = datetime.strptime(str(diaAnalizarFin), '%Y-%m-%d %H:%M:%S.%f')
+        else:
+            #  DATOS DE ANALISIS DE PRUEBA
+            diaAnalizarIni = datetime.strptime(diaAnalizarIni, '%Y-%m-%d %H:%M')
+            diaAnalizarFin = datetime.strptime(diaAnalizarFin, '%Y-%m-%d %H:%M')
+
         # coordenadaAnalizar = '-57.606765,-25.284659'  # Asuncion
         # coordenadaAnalizar = '-55.873211,-27.336775' # Encarnacion - Playa San Jose
 
-        tiempoIntervalo = 10  # minutos
-        # DATOS DE ANALISIS EN TIEMPO REAL
+        print(diaAnalizarIni)
+        print(diaAnalizarFin)
 
-        # diaAnalizarIni = datetime.now() - timedelta(minutes=15)
-        # diaAnalizarFin = datetime.now()
+        tiempoIntervalo = 10  # minutos
+
 
         diametroAnalizar = '45000'  # en metros
 
@@ -51,8 +62,7 @@ class SVM:
         database_connection = db.DatabaseConnection('190.128.205.75', 'rayos', 'cta', 'M9vNvgQ2=4os')
         rows = database_connection.query(
             "SELECT start_time,end_time,type,latitude,longitude,peak_current FROM lightning_data WHERE ST_DistanceSphere(geom, ST_MakePoint(" + coordenadaAnalizar + ")) <= " + diametroAnalizar + "  AND start_time >= to_timestamp('" + str(
-                diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND start_time <= to_timestamp('" + str(
-                diaAnalizarFin) + "', 'YYYY-MM-DD HH24:MI:SS.MS')")
+                diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND start_time <= to_timestamp('" + str(diaAnalizarFin) + "', 'YYYY-MM-DD HH24:MI:SS.MS')")
         print("Conectado")
 
         print("Preparando datos")
