@@ -11,7 +11,7 @@ if __name__ == '__main__':
 
     inicio_de_tiempo = time.time()
 
-    database_connection = db.DatabaseConnection('190.128.205.75','rayos','cta','M9vNvgQ2=4os')
+    database_connection = db.DatabaseConnection('','rayos','cta','')
 
     diaAnalizarIni = datetime.strptime('2016-11-27 13:00:00', '%Y-%m-%d %H:%M:%S')
     diaAnalizarFin = datetime.strptime('2016-11-27 17:00:00', '%Y-%m-%d %H:%M:%S')
