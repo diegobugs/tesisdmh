@@ -62,7 +62,7 @@ def SVM(diaAnalizarIni, diaAnalizarFin, coordenadaAnalizar):
 
     print("Conectando a la base de datos...Descargas")
     # Conexion a la base de datos de descargas electricas
-    database_connection = db.DatabaseConnection('190.128.205.75', 'rayos', 'cta', 'M9vNvgQ2=4os')
+    database_connection = db.DatabaseConnection('', 'rayos', 'cta', '')
     rows = database_connection.query(
         "SELECT start_time,end_time,type,latitude,longitude,peak_current,ic_height,number_of_sensors,ic_multiplicity,cg_multiplicity,geom FROM lightning_data WHERE ST_DistanceSphere(geom, ST_MakePoint(" + coordenadaAnalizar + ")) <= " + diametroAnalizar + "  AND start_time >= to_timestamp('" + str(
             diaAnalizarIni) + "', 'YYYY-MM-DD HH24:MI:SS.MS') AND start_time <= to_timestamp('" + str(
