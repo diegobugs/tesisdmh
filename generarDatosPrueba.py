@@ -80,7 +80,7 @@ class ML_SVM:
         print("Analisis iniciado: " + str(datetime.now()))
 
         # Conexion a la base de datos de descargas electricas
-        database_connection = db.DatabaseConnection('190.128.205.75', 'rayos', 'cta', 'M9vNvgQ2=4os')
+        database_connection = db.DatabaseConnection('', 'rayos', 'cta', '')
 
         # Definicion de tiempos a ser analizados, estas variables iran iterando en un bucle segun el tiempoIntervalo
         tiempoAnalizarIni = diaAnalizarIni
